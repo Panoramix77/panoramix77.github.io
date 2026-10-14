@@ -59,5 +59,176 @@
         </ul>
     </section>
 
+<style>
+  #catalogo-archivos {
+    margin-top: 30px;
+  }
+
+  #buscar-archivos {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 12px;
+    margin: 12px 0 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+
+  .grupo-archivos {
+    margin: 20px 0;
+    padding: 16px;
+    background: white;
+    border-radius: 10px;
+  }
+
+  .grupo-archivos li {
+    margin: 12px 0;
+    overflow-wrap: anywhere;
+  }
+
+  .grupo-archivos a {
+    text-decoration: none;
+  }
+
+  .ruta-archivo {
+    color: #666;
+    font-size: 0.85em;
+  }
+</style>
+
+<section id="catalogo-archivos">
+  <h2>📁 Mis archivos</h2>
+  <p id="estado-archivos">Cargando archivos...</p>
+  <input
+    id="buscar-archivos"
+    type="search"
+    placeholder="Buscar archivos..."
+    aria-label="Buscar archivos"
+    hidden
+  >
+  <div id="lista-archivos"></div>
+</section>
+
+<script>
+(async function () {
+  const api =
+    "https://api.github.com/repos/Panoramix77/" +
+    "panoramix77.github.io/git/trees/main?recursive=1";
+
+  const estado = document.getElementById("estado-archivos");
+  const lista = document.getElementById("lista-archivos");
+  const buscar = document.getElementById("buscar-archivos");
+
+  try {
+    const respuesta = await fetch(api);
+
+    if (!respuesta.ok) {
+      throw new Error("GitHub ha respondido: " + respuesta.status);
+    }
+
+    const datos = await respuesta.json();
+
+    if (datos.truncated) {
+      throw new Error("El repositorio es demasiado grande para este listado.");
+    }
+
+    const archivos = datos.tree.filter(item =>
+      item.type === "blob" &&
+      item.path.startsWith("archivos/")
+    );
+
+    if (archivos.length === 0) {
+      estado.textContent = "No hay archivos publicados en archivos/.";
+      return;
+    }
+
+    archivos.sort((a, b) =>
+      a.path.localeCompare(b.path, "es")
+    );
+
+    function mostrar(filtro = "") {
+      lista.replaceChildren();
+
+      const encontrados = archivos.filter(item =>
+        item.path.slice("archivos/".length)
+          .toLocaleLowerCase("es")
+          .includes(filtro.toLocaleLowerCase("es"))
+      );
+
+      if (!encontrados.length) {
+        estado.textContent = "No se encontraron archivos.";
+        return;
+      }
+
+      estado.textContent =
+        encontrados.length + " archivo(s)";
+
+      const grupos = new Map();
+
+      encontrados.forEach(item => {
+        const partes = item.path.split("/");
+        const carpeta = partes.length > 2
+          ? partes.slice(1, -1).join("/")
+          : "Archivos generales";
+
+        if (!grupos.has(carpeta)) {
+          grupos.set(carpeta, []);
+        }
+
+        grupos.get(carpeta).push(item);
+      });
+
+      for (const [carpeta, elementos] of grupos) {
+        const seccion = document.createElement("div");
+        seccion.className = "grupo-archivos";
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = "📂 " + carpeta;
+        seccion.appendChild(titulo);
+
+        const ul = document.createElement("ul");
+
+        elementos.forEach(item => {
+          const li = document.createElement("li");
+          const enlace = document.createElement("a");
+
+          const ruta = item.path.split("/")
+            .map(parte => encodeURIComponent(parte))
+            .join("/");
+
+          enlace.href =
+            "https://panoramix77.github.io/" + ruta;
+          enlace.textContent =
+            item.path.split("/").pop();
+          enlace.target = "_blank";
+          enlace.rel = "noopener";
+
+          li.appendChild(enlace);
+
+          const detalle = document.createElement("div");
+          detalle.className = "ruta-archivo";
+          detalle.textContent = item.path;
+
+          li.appendChild(detalle);
+          ul.appendChild(li);
+        });
+
+        seccion.appendChild(ul);
+        lista.appendChild(seccion);
+      }
+    }
+
+    buscar.hidden = false;
+    buscar.addEventListener("input", () => mostrar(buscar.value));
+    mostrar();
+
+  } catch (error) {
+    estado.textContent =
+      "No se pudo cargar el catálogo. " + error.message;
+  }
+})();
+</script>
+
+    
 </body>
 </html>
