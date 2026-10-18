@@ -1,0 +1,1177 @@
+<title>Consola x230 · Curso GESTRED 2026 Rota</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: barra de control arriba · consola grande a la izquierda · columna de contexto (niveles, paso, topología) a la derecha */
+:root{
+  --bg:#E9EEEC; --panel:#FFFFFF; --ink:#15211E; --muted:#56655F; --line:#CCD6D2;
+  --accent:#0B6E8A; --accent-ink:#FFFFFF; --accent-soft:#D7ECF2;
+  --term:#0F1715; --term-ink:#D6E4DE; --term-dim:#7E918A; --term-line:#1F2C29;
+  --m-user:#7FB2FF; --m-priv:#FFC861; --m-config:#FF8F6B; --m-if:#4FD1B8; --m-vlan:#C79BFF; --m-line:#FF8FC1; --m-router:#9EDB6A;
+  --ok:#2E8B57; --bad:#C2413A; --warn:#B7791F;
+  --f-display:"IBM Plex Sans Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --term-size:20px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1312; --panel:#161E1C; --ink:#E2ECE8; --muted:#94A6A0; --line:#2A3633;
+  --accent:#3FB2D1; --accent-ink:#06171C; --accent-soft:#16323A;
+  --term:#080D0C; --term-line:#1A2522; color-scheme:dark;
+  --ok:#5CC48B; --bad:#F07A72; --warn:#E3B04B;
+}}
+:root[data-theme="dark"]{
+  --bg:#0E1312; --panel:#161E1C; --ink:#E2ECE8; --muted:#94A6A0; --line:#2A3633;
+  --accent:#3FB2D1; --accent-ink:#06171C; --accent-soft:#16323A;
+  --term:#080D0C; --term-line:#1A2522; color-scheme:dark;
+  --ok:#5CC48B; --bad:#F07A72; --warn:#E3B04B;
+}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.45}
+.app{min-height:100%;display:flex;flex-direction:column;gap:12px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+/* barra superior */
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:.01em;display:flex;align-items:baseline;gap:8px;margin-right:6px}
+.brand small{font-family:var(--f-mono);font-weight:500;font-size:12px;color:var(--muted);letter-spacing:.04em}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;background:transparent;color:var(--ink);font:500 14px var(--f-body);padding:8px 12px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+select,.btn{font:500 14px var(--f-body);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+select{max-width:100%;min-width:0;flex:1 1 260px}
+.btn{cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn:focus-visible,select:focus-visible,.seg button:focus-visible,.chip:focus-visible,#cmd:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.spacer{flex:1}
+.tools{display:flex;gap:6px;flex-wrap:wrap}
+/* cabecera de la lección */
+.lesson-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.lesson-head h1{font-family:var(--f-display);font-weight:600;font-size:clamp(20px,2vw,28px);margin:0;text-wrap:balance}
+.lesson-head .day{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600}
+.lesson-head p{margin:0;color:var(--muted);flex-basis:100%;max-width:90ch}
+/* rejilla principal */
+.main{display:grid;grid-template-columns:minmax(0,1fr) minmax(280px,380px);gap:12px;flex:1;min-height:0}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+/* consola */
+.term-wrap{display:flex;flex-direction:column;min-width:0;min-height:420px;background:var(--term);border-radius:10px;border:1px solid var(--term-line);overflow:hidden}
+.term-top{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--term-line);font:500 12px var(--f-mono);color:var(--term-dim);letter-spacing:.04em}
+.term-top .dot{width:9px;height:9px;border-radius:50%;background:var(--m-if);box-shadow:0 0 0 3px rgba(79,209,184,.15)}
+.term{flex:1;overflow:auto;padding:14px 16px 18px;font-family:var(--f-mono);font-size:var(--term-size);line-height:1.38;color:var(--term-ink);min-height:300px;max-height:calc(100vh - 230px)}
+@media (max-width:900px){.term{max-height:60vh}}
+.ln{display:grid;grid-template-columns:5.2em max-content;gap:0 .6em;white-space:pre}
+.ln .tag{font-size:.62em;font-weight:600;letter-spacing:.06em;color:var(--term-dim);padding-top:.35em;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ln .tag.sw1{color:#8CC8FF}.ln .tag.sw2{color:#FFC861}.ln .tag.sw3{color:#C79BFF}.ln .tag.pc{color:#9EDB6A}.ln .tag.ext{color:#FF8FC1}
+.ln.out .txt{color:var(--term-ink)}
+.ln.out.dim .txt{color:var(--term-dim)}
+.ln.err .txt{color:#FF8A80}
+.p-user{color:var(--m-user)}.p-priv{color:var(--m-priv)}.p-config{color:var(--m-config)}.p-if{color:var(--m-if)}.p-vlan{color:var(--m-vlan)}.p-line{color:var(--m-line)}.p-router{color:var(--m-router)}.p-login{color:var(--term-dim)}.p-pc{color:#9EDB6A}
+.typed{color:#FFFFFF;font-weight:500}
+.caret{display:inline-block;width:.6em;height:1.05em;vertical-align:-.15em;background:var(--term-ink);animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.caret{animation:none}}
+.note{margin:.55em 0;padding:.45em .7em;border:1px dashed #6E5A2A;border-radius:6px;color:#F3D28B;font-family:var(--f-body);font-size:.8em;white-space:normal}
+.note b{font-weight:600;color:#FFE2A3}
+.term-input{display:flex;align-items:center;gap:.5em;padding:10px 16px;border-top:1px solid var(--term-line);font-family:var(--f-mono);font-size:var(--term-size)}
+.term-input .pr{white-space:nowrap}
+#cmd{flex:1;min-width:0;background:transparent;border:0;color:#fff;font:inherit;outline:none;caret-color:#fff}
+/* controles de paso */
+.stepbar{display:flex;align-items:center;gap:10px;padding:10px 12px;border-top:1px solid var(--term-line);background:rgba(255,255,255,.02);flex-wrap:wrap}
+.stepbar .btn{background:#17221F;color:#E7F1ED;border-color:#2B3A36}
+.stepbar .btn:disabled{opacity:.4;cursor:default}
+.stepbar .btn.primary{background:var(--m-if);color:#062019;border-color:var(--m-if)}
+.prog{flex:1 1 160px;height:6px;background:#1C2926;border-radius:3px;overflow:hidden;min-width:120px}
+.prog i{display:block;height:100%;width:0;background:var(--m-if);transition:width .2s}
+.count{font:500 13px var(--f-mono);color:var(--term-dim);font-variant-numeric:tabular-nums;white-space:nowrap}
+.hint-keys{font:12px var(--f-body);color:var(--term-dim)}
+/* columna derecha */
+.side{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;min-width:0}
+.card h2{font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.where{font-family:var(--f-mono);font-size:13px;color:var(--muted);margin-bottom:10px;min-height:1.4em}
+.where b{color:var(--ink);font-weight:600}
+.ladder{display:flex;flex-direction:column;gap:6px;margin:0;padding:0;list-style:none}
+.lv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:2px 10px;align-items:center;border:1px solid var(--line);border-radius:8px;padding:7px 10px;transition:background .15s,border-color .15s}
+.lv .pm{font-family:var(--f-mono);font-weight:600;font-size:14px;padding:2px 7px;border-radius:5px;background:var(--term);white-space:nowrap}
+.lv .nm{font-weight:600;font-size:14px}
+.lv .how{grid-column:2;font-size:12.5px;color:var(--muted)}
+.lv.child{margin-left:22px}
+.lv.on{border-color:var(--accent);background:var(--accent-soft)}
+.lv.on .nm::after{content:"  ← estás aquí";font-weight:500;color:var(--accent);font-size:12.5px}
+.lv:not(.on) .how{display:none}
+.lv.on .how{display:block}
+.step-txt{margin:0 0 8px;font-size:15.5px}
+.expect{border-left:3px solid var(--ok);padding:6px 10px;background:color-mix(in srgb,var(--ok) 9%,transparent);border-radius:0 6px 6px 0;font-size:14.5px}
+.expect b{display:block;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ok);margin-bottom:2px}
+.expect:empty{display:none}
+.topo svg{width:100%;height:auto;display:block}
+.topo .legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:6px}
+.topo .legend span{display:inline-flex;align-items:center;gap:5px}
+.topo .legend i{display:inline-block;width:22px;height:0;border-top:3px solid var(--accent)}
+.topo .legend i.blk{border-top-style:dashed;border-color:var(--bad)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 13px var(--f-mono);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:5px 8px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+.free-hint{font-size:14px;margin:0 0 8px;color:var(--ink)}
+.free-hint.bad{color:var(--bad)}
+.foot{font-size:12px;color:var(--muted);max-width:100ch}
+</style>
+
+<div class="app" id="app">
+  <div class="bar">
+    <div class="brand">Consola x230 <small>AlliedWare Plus · aula GESTRED 2026 Rota</small></div>
+    <div class="seg" role="group" aria-label="Modo">
+      <button id="mStep" aria-pressed="true">Paso a paso</button>
+      <button id="mFree" aria-pressed="false">Modo libre</button>
+    </div>
+    <select id="lesson" aria-label="Lección"></select>
+    <div class="spacer"></div>
+    <div class="tools">
+      <button class="btn" id="fMinus" title="Letra más pequeña" aria-label="Letra más pequeña">A−</button>
+      <button class="btn" id="fPlus" title="Letra más grande" aria-label="Letra más grande">A+</button>
+      <button class="btn" id="full" title="Pantalla completa">⛶ Pantalla completa</button>
+    </div>
+  </div>
+
+  <div class="lesson-head">
+    <span class="day" id="lDay"></span>
+    <h1 id="lTitle"></h1>
+    <p id="lGoal"></p>
+  </div>
+
+  <div class="main">
+    <section class="term-wrap" aria-label="Consola">
+      <div class="term-top"><span class="dot"></span><span id="termTitle">Consola serie · 9600 8N1</span></div>
+      <div class="term" id="term" aria-live="polite"></div>
+      <div class="term-input" id="inputRow" hidden>
+        <span class="pr" id="inPrompt"></span>
+        <input id="cmd" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Escribe un comando">
+      </div>
+      <div class="stepbar" id="stepBar">
+        <button class="btn" id="prev">◀ Anterior</button>
+        <button class="btn primary" id="next">Siguiente ▶</button>
+        <div class="prog" aria-hidden="true"><i id="progBar"></i></div>
+        <span class="count" id="count"></span>
+        <button class="btn" id="restart">↺ Reiniciar</button>
+        <span class="hint-keys">Teclas: → / espacio avanza · ← retrocede (sirve el mando de presentaciones)</span>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="card">
+        <h2>Dónde estás</h2>
+        <div class="where" id="where"></div>
+        <ul class="ladder" id="ladder"></ul>
+      </div>
+      <div class="card" id="stepCard">
+        <h2 id="stepHead">Este paso</h2>
+        <p class="step-txt" id="stepTxt"></p>
+        <div class="expect" id="stepExp"></div>
+      </div>
+      <div class="card" id="freeCard" hidden>
+        <h2>Prueba esto</h2>
+        <p class="free-hint" id="freeHint">Escribe en la consola o pulsa un comando. Usa <b>?</b> para ver qué se puede hacer en cada nivel y <b>Tab</b> para completar.</p>
+        <div class="chips" id="chips"></div>
+      </div>
+      <div class="card topo" id="topoCard" hidden>
+        <h2>Topología del aula</h2>
+        <div id="topo"></div>
+        <div class="legend"><span><i></i>Cable activo</span><span><i class="blk"></i>Bloqueado por STP</span></div>
+      </div>
+    </aside>
+  </div>
+  <p class="foot">Salidas simplificadas a partir de AlliedWare Plus 5.5: el formato exacto puede variar con la versión del firmware. Las MAC, números de serie y tiempos son de ejemplo.</p>
+</div>
+
+<script>
+/* ===================== Niveles ===================== */
+const LV = {
+  login:{nm:'Fuera del switch', pm:'login:', how:'Escribe el usuario (manager) y la contraseña (friend).'},
+  user:{nm:'Usuario', pm:'>', how:'Mirar lo básico y hacer ping. Para subir: enable. Para salir: exit.'},
+  priv:{nm:'Privilegiado', pm:'#', how:'Ver todo (show …), guardar, borrar, reiniciar. Entrar a configurar: configure terminal. Bajar: disable.'},
+  config:{nm:'Configuración global', pm:'(config)#', how:'Cambios para todo el switch: hostname, VLAN, rutas, STP, SNMP. Desde aquí se entra a interface, vlan database, line… Volver: exit o end.'},
+  if:{nm:'Interfaz', pm:'(config-if)#', how:'Configurar el puerto o interfaz elegido: switchport, shutdown, ip address, access-group, mirror… exit sube a config; end vuelve a #.'},
+  vlan:{nm:'Base de datos de VLAN', pm:'(config-vlan)#', how:'Crear, nombrar y borrar VLAN: vlan 10 name ADMIN · no vlan 10. exit sube a config.'},
+  line:{nm:'Líneas de acceso', pm:'(config-line)#', how:'Acceso por consola (line console 0) o remoto (line vty 0 4): tiempos, contraseñas. exit sube a config.'},
+  router:{nm:'Protocolo de routing', pm:'(config-router)#', how:'Configurar RIP u OSPF (si el firmware lo incluye). exit sube a config.'}
+};
+const ORDER = ['user','priv','config','if','vlan','line','router'];
+const ENTER = {user:'al iniciar sesión',priv:'enable',config:'configure terminal',if:'interface port1.0.1',vlan:'vlan database',line:'line console 0',router:'router ospf 1'};
+
+function promptOf(st){
+  if(st.mode==='login') return st.host+' login:';
+  if(st.mode==='pass') return 'Password:';
+  return st.host+LV[st.mode].pm;
+}
+function modeClass(m){return m==='pass'?'p-login':'p-'+m}
+
+/* transición de nivel a partir de un comando (canónico) */
+function transition(st,cmd){
+  const raw=cmd.trim(); const t=raw.toLowerCase().split(/\s+/); const w=t[0];
+  switch(st.mode){
+    case 'login': st.mode='pass'; return;
+    case 'pass': st.mode='user'; return;
+    case 'user': if(w==='enable') st.mode='priv'; else if(w==='exit'||w==='logout') st.mode='login'; return;
+    case 'priv':
+      if(w==='configure') st.mode='config';
+      else if(w==='disable') st.mode='user';
+      else if(w==='exit'||w==='logout'||w==='reboot'||w==='reload') st.mode='login';
+      return;
+    default:
+      if(w==='end'||raw==='^Z'){st.mode='priv';return}
+      if(w==='exit'){st.mode = st.mode==='config'?'priv':'config';return}
+      if(w==='interface'){st.mode='if';st.ifn=t[1];return}
+      if(st.mode==='config'&&w==='vlan'&&t[1]==='database'){st.mode='vlan';return}
+      if(w==='line'&&st.mode!=='line'){st.mode='line';return}
+      if(w==='router'){st.mode='router';return}
+      if(w==='hostname'&&st.mode==='config'){st.host=raw.split(/\s+/)[1];return}
+  }
+}
+
+/* ===================== Salidas de ejemplo ===================== */
+const O = {};
+O.banner = `
+AlliedWare Plus (TM) 5.5.x
+`;
+O.helpUser = `  enable      Turn on privileged mode command
+  exit        End current mode and down to previous mode
+  logout      Exit from the EXEC
+  ping        Send echo messages
+  show        Show running system information
+  traceroute  Trace route to destination`;
+O.system = `Switch System Status                              Mon Oct 19 16:24:10 2026
+
+Board       ID  Bay   Board Name                     Rev   Serial number
+--------------------------------------------------------------------------
+Base       449        x230-10GT                      A-0   G1Q7Ax000123
+--------------------------------------------------------------------------
+RAM:  Total: 507404 kB Free: 391212 kB
+Flash: 63.0MB Used: 41.2MB Available: 21.8MB
+--------------------------------------------------------------------------
+Environment Status : Normal
+Uptime             : 0 days 00:06:41
+Current software   : x230-5.5.x.rel
+Current boot config: flash:/default.cfg (file exists)
+
+System Name
+ awplus`;
+const PORTS = n=>Array.from({length:10},(_,i)=>`port1.0.${i+1}`);
+O.ifBrief = `Interface             Status          Protocol
+port1.0.1             admin up        running
+port1.0.2             admin up        down
+port1.0.3             admin up        running
+port1.0.4             admin up        down
+port1.0.5             admin up        down
+port1.0.6             admin up        down
+port1.0.7             admin up        down
+port1.0.8             admin up        down
+port1.0.9             admin up        down
+port1.0.10            admin up        down
+lo                    admin up        running
+vlan1                 admin up        running`;
+O.saved = `Building configuration...
+[OK]`;
+const VBH = `VLAN ID  Name            Type    State   Member ports
+                                        (u)-Untagged, (t)-Tagged
+======= ================ ======= ======= ====================================`;
+O.vlanP2 = `${VBH}
+1       default          STATIC  ACTIVE  port1.0.5(u) port1.0.6(u) port1.0.7(u)
+                                         port1.0.8(u) port1.0.9(u) port1.0.10(u)
+10      ADMIN            STATIC  ACTIVE  port1.0.1(u) port1.0.2(u)
+20      INVITADOS        STATIC  ACTIVE  port1.0.3(u) port1.0.4(u)`;
+O.vlanP3 = `${VBH}
+1       default          STATIC  ACTIVE  port1.0.5(u) port1.0.6(u) port1.0.7(u)
+                                         port1.0.8(u) port1.0.9(u) port1.0.10(u)
+10      ADMIN            STATIC  ACTIVE  port1.0.1(u) port1.0.2(u)
+                                         port1.0.7(t) port1.0.8(t)
+20      INVITADOS        STATIC  ACTIVE  port1.0.3(u) port1.0.4(u)
+                                         port1.0.7(t) port1.0.8(t)`;
+const PING_OK = ip=>`Haciendo ping a ${ip} con 32 bytes de datos:
+Respuesta desde ${ip}: bytes=32 tiempo=1ms TTL=64
+Respuesta desde ${ip}: bytes=32 tiempo<1m TTL=64
+Respuesta desde ${ip}: bytes=32 tiempo<1m TTL=64
+Respuesta desde ${ip}: bytes=32 tiempo<1m TTL=64
+
+Paquetes: enviados = 4, recibidos = 4, perdidos = 0 (0% perdidos)`;
+const PING_KO = ip=>`Haciendo ping a ${ip} con 32 bytes de datos:
+Tiempo de espera agotado para esta solicitud.
+Tiempo de espera agotado para esta solicitud.
+Tiempo de espera agotado para esta solicitud.
+Tiempo de espera agotado para esta solicitud.
+
+Paquetes: enviados = 4, recibidos = 0, perdidos = 4 (100% perdidos)`;
+const STPH = (rootId,bridgeId,rp,prio,cost)=>`% Default: Bridge up - Spanning Tree Enabled
+% Default: Root Path Cost ${cost} - Root Port ${rp} - Bridge Priority ${prio}
+% Default: Forward Delay 15 - Hello Time 2 - Max Age 20
+% Default: Root Id ${rootId}
+% Default: Bridge Id ${bridgeId}
+Port         Designated Bridge    Port Id   Role         State`;
+const ID1='80000000cd240a3c', ID2='80000000cd240a17', ID3='80000000cd240a52', ID1R='10000000cd240a3c';
+const ROUTEH = `Codes: C - connected, S - static, R - RIP, B - BGP
+       O - OSPF, IA - OSPF inter area
+       * - candidate default
+
+IP Route Table for VRF "default"`;
+const INVALID = (prompt,cmd)=>' '.repeat(prompt.length+1)+'^\n% Invalid input detected at \'^\' marker.';
+
+/* ===================== Lecciones ===================== */
+/* campos de paso: d=dispositivo (SW1/SW2/SW3/PC/PROFE/WS/ZBX/note) · c=comando · o=salida · e=explicación · r=resultado esperado
+   lab=etiqueta PC · hide=no mostrar lo tecleado · err=no cambia de nivel · set=fuerza estado · cab/blk=topología */
+const L = [];
+const G = {pre:'Primeros pasos', d19:'Lunes 19/10', d20:'Martes 20/10', d21:'Miércoles 21/10', d22:'Jueves 22/10', d23:'Viernes 23/10', d26:'Lunes 26/10', d27:'Martes 27/10', d28:'Miércoles 28/10'};
+
+L.push({id:'consola', g:'pre', t:'Conectar por consola', goal:'La consola es la puerta de servicio: funciona aunque el switch no tenga red ni IP. Es lo primero que se aprende.',
+ start:{SW1:{host:'awplus',mode:'login'}},
+ steps:[
+  {d:'note', c:'<b>Cable de consola:</b> puerto CONSOLE (RJ-45) del switch ↔ USB del PC.', e:'Un cable de consola por pareja. En Windows, el Administrador de dispositivos dice qué puerto COM es (por ejemplo COM3). En Linux suele ser /dev/ttyUSB0.'},
+  {d:'note', c:'<b>PuTTY:</b> Connection type <b>Serial</b> · Serial line <b>COM3</b> · Speed <b>9600</b> → Open. &nbsp;<b>Linux:</b> screen /dev/ttyUSB0 9600', e:'Parámetros de la consola: 9600 baudios, 8 bits, sin paridad, 1 bit de parada, sin control de flujo (9600 8N1).', r:'Se abre una ventana negra vacía. Pulsad Intro un par de veces.'},
+  {d:'SW1', c:'manager', e:'El switch pide el usuario. El de fábrica es manager.', r:'Aparece "Password:".'},
+  {d:'SW1', c:'friend', hide:true, o:O.banner, e:'La contraseña de fábrica es friend. Al escribirla no se ve nada: es normal, no está colgado.', r:'Aparece el prompt awplus> . Ya estamos dentro.'},
+  {d:'SW1', c:'?', err:true, o:O.helpUser, e:'El ? es la ayuda: lista los comandos que existen EN ESTE NIVEL. En el nivel usuario hay muy pocos.', r:'Una lista corta: enable, exit, ping, show…'},
+  {d:'SW1', c:'exit', o:'', e:'exit en el nivel usuario cierra la sesión.', r:'Volvemos a "awplus login:".'}
+ ]});
+
+L.push({id:'niveles', g:'pre', t:'Los niveles del switch', goal:'El prompt dice en qué "sala" estás. Cada comando solo funciona en su sala. Recorremos todas y volvemos.',
+ start:{SW1:{host:'awplus',mode:'user'}},
+ steps:[
+  {d:'SW1', c:'configure terminal', err:true, o:INVALID('awplus>','configure terminal'), e:'Intentamos configurar desde el nivel usuario. El switch no lo entiende: ese comando no existe en esta sala.', r:'% Invalid input detected. Casi siempre significa "estás en el nivel equivocado".'},
+  {d:'SW1', c:'enable', e:'enable sube al nivel privilegiado. Con el usuario manager no pide contraseña.', r:'El prompt cambia de > a #.'},
+  {d:'SW1', c:'show running-config', o:`!
+service password-encryption
+!
+no banner motd
+!
+username manager privilege 15 lgpassword ...
+!
+interface port1.0.1-1.0.10
+ switchport
+ switchport mode access
+!
+interface vlan1
+ ip address dhcp
+!
+line con 0
+line vty 0 4
+!
+end`, e:'En # se puede ver todo. running-config es la configuración que el switch está usando AHORA (en memoria).', r:'La configuración de fábrica: todos los puertos access en la VLAN 1.'},
+  {d:'SW1', c:'configure terminal', e:'Entramos en la sala de máquinas: la configuración global.', r:'El prompt pasa a awplus(config)#.'},
+  {d:'SW1', c:'hostname SW1', e:'Un cambio global: el nombre del switch. Se aplica al instante.', r:'El prompt cambia de nombre: SW1(config)#.'},
+  {d:'SW1', c:'interface port1.0.1', e:'Entramos en UN puerto concreto. Todo lo que escribamos ahora afecta solo a port1.0.1.', r:'SW1(config-if)#. Ojo: el prompt no dice qué puerto es; hay que recordarlo.'},
+  {d:'SW1', c:'description PC alumno A', e:'Una etiqueta para saber qué hay conectado. Es un comando de interfaz: aquí sí funciona.', r:'Sin mensaje. En AW+, sin mensaje = todo bien.'},
+  {d:'SW1', c:'exit', e:'exit sube UN nivel: de la interfaz a la configuración global.', r:'SW1(config)#.'},
+  {d:'SW1', c:'vlan database', e:'Otra sala que cuelga de config: la base de datos de VLAN.', r:'SW1(config-vlan)#.'},
+  {d:'SW1', c:'vlan 10 name ADMIN', e:'Aquí se crean las VLAN. Mañana lo hacemos de verdad.', r:'Sin mensaje.'},
+  {d:'SW1', c:'hostname PRUEBA', err:true, o:INVALID('SW1(config-vlan)#','hostname PRUEBA'), e:'hostname es un comando de configuración GLOBAL. En la sala de VLAN no existe.', r:'% Invalid input. Para cambiar el nombre habría que hacer exit primero.'},
+  {d:'SW1', c:'exit', e:'Volvemos a la configuración global.', r:'SW1(config)#.'},
+  {d:'SW1', c:'line console 0', e:'La sala de las "puertas de entrada": la consola (line console 0) y el acceso remoto (line vty 0 4). Hoy solo miramos.', r:'SW1(config-line)#.'},
+  {d:'SW1', c:'end', e:'end (o Ctrl+Z) vuelve directamente a # desde CUALQUIER nivel de configuración, sin ir subiendo de uno en uno.', r:'SW1#.'},
+  {d:'SW1', c:'copy running-config startup-config', o:O.saved, e:'Guardamos: lo que está en memoria (running) pasa a la flash (startup). Sin esto, al apagar se pierde todo.', r:'Building configuration… [OK].'},
+  {d:'SW1', c:'disable', e:'Bajamos de # a >.', r:'SW1>.'},
+  {d:'SW1', c:'exit', e:'Y cerramos la sesión.', r:'SW1 login: (el nombre nuevo ya aparece hasta en el login).'}
+ ]});
+
+L.push({id:'libre', g:'pre', t:'Modo libre: explora los niveles', free:true, goal:'Escribid comandos de verdad. El panel de la derecha os dice en qué nivel estáis y, si un comando falla, en qué nivel habría que escribirlo.'});
+
+/* ---------- Día 19 ---------- */
+L.push({id:'p1', g:'d19', t:'P1 · Configuración básica y tabla MAC', goal:'Entrar, poner nombre al switch y ver cómo aprende las MAC de los PC.',
+ start:{SW1:{host:'awplus',mode:'user'}},
+ steps:[
+  {d:'SW1', c:'enable', e:'Subimos a privilegiado para poder verlo todo.', r:'awplus#'},
+  {d:'SW1', c:'show system', o:O.system, e:'Ficha del switch: modelo, número de serie, memoria, tiempo encendido y versión de software.', r:'Board Name: x230-10GT.'},
+  {d:'SW1', c:'show interface brief', o:O.ifBrief, e:'Estado de todos los puertos. running = hay algo conectado y funcionando; down = no hay nada.', r:'port1.0.1 y port1.0.3 (los PC) en running.'},
+  {d:'SW1', c:'configure terminal', e:'A configurar.', r:'awplus(config)#'},
+  {d:'SW1', c:'hostname SW1', e:'Cada pareja pone el nombre de su switch: SW1, SW2 o SW3.', r:'El prompt cambia al momento: SW1(config)#.'},
+  {d:'SW1', c:'end', e:'Volvemos a #.', r:'SW1#'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.10.12', o:PING_OK('192.168.10.12'), e:'El alumno A hace ping al PC del alumno B. Están en la misma subred y, por ahora, los dos en la VLAN 1.', r:'4 respuestas.'},
+  {d:'SW1', c:'show mac address-table', o:`VLAN  port             mac             fwd
+1     port1.0.1        0050.56a1.0b11  forward   dynamic
+1     port1.0.3        0050.56a1.0b12  forward   dynamic`, e:'El switch ha aprendido las MAC de los dos PC al pasar el ping, y apunta en qué puerto está cada una (4.1).', r:'Dos MAC en la VLAN 1: una en port1.0.1 y otra en port1.0.3.'},
+  {d:'PC', lab:'PC A · SW1', c:'ipconfig /all', o:`Adaptador de Ethernet Ethernet:
+   Dirección física. . . . . . . . : 00-50-56-A1-0B-11
+   Dirección IPv4. . . . . . . . . : 192.168.10.11
+   Máscara de subred . . . . . . . : 255.255.255.0`, e:'Comparad la MAC del PC con la que ve el switch. Windows la escribe con guiones y el switch en grupos de 4.', r:'00-50-56-A1-0B-11 = 0050.56a1.0b11. Es la misma.'},
+  {d:'SW1', c:'copy running-config startup-config', o:O.saved, e:'Guardamos el nombre.', r:'[OK]'}
+ ]});
+
+L.push({id:'p2', g:'d19', t:'P2 · VLAN en un switch', goal:'Partir el switch en dos redes: VLAN 10 (Administración) y VLAN 20 (Invitados), y comprobar que ya no se ven.',
+ start:{SW1:{host:'SW1',mode:'priv'}},
+ steps:[
+  {d:'SW1', c:'configure terminal', e:'Entramos a configurar.', r:'SW1(config)#'},
+  {d:'SW1', c:'vlan database', e:'Las VLAN se dan de alta en su propia sala.', r:'SW1(config-vlan)#'},
+  {d:'SW1', c:'vlan 10 name ADMIN', e:'Creamos la VLAN 10 y le ponemos nombre.', r:'Sin mensaje.'},
+  {d:'SW1', c:'vlan 20 name INVITADOS', e:'Y la VLAN 20.', r:'Sin mensaje.'},
+  {d:'SW1', c:'exit', e:'Salimos a la configuración global.', r:'SW1(config)#'},
+  {d:'SW1', c:'interface port1.0.1-1.0.2', e:'Entramos en DOS puertos a la vez (un rango). Lo que escribamos se aplica a los dos.', r:'SW1(config-if)#'},
+  {d:'SW1', c:'switchport mode access', e:'Puerto access: una sola VLAN, sin etiqueta. Es el modo para PC (4.3).', r:'Sin mensaje.'},
+  {d:'SW1', c:'switchport access vlan 10', e:'Estos dos puertos pasan a la VLAN 10.', r:'Sin mensaje.'},
+  {d:'SW1', c:'exit', e:'Volvemos a config para cambiar de puertos.', r:'SW1(config)#'},
+  {d:'SW1', c:'interface port1.0.3-1.0.4', e:'Ahora los puertos 3 y 4.', r:'SW1(config-if)#'},
+  {d:'SW1', c:'switchport mode access', e:'También access.', r:''},
+  {d:'SW1', c:'switchport access vlan 20', e:'A la VLAN 20.', r:''},
+  {d:'SW1', c:'end', e:'Volvemos a # para mirar.', r:'SW1#'},
+  {d:'SW1', c:'show vlan brief', o:O.vlanP2, e:'Qué VLAN hay y qué puertos tiene cada una. (u) = untagged: sin etiqueta, como debe ser en un puerto de PC.', r:'VLAN 10 con los puertos 1 y 2; VLAN 20 con los puertos 3 y 4.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.10.12', o:PING_KO('192.168.10.12'), e:'El mismo ping de antes. Misma subred, mismo switch… pero ahora en VLAN distintas.', r:'Falla. Distinta VLAN = no se ven (4.2).'},
+  {d:'note', c:'<b>Acción:</b> el alumno B pasa su cable de <b>port1.0.3</b> a <b>port1.0.2</b> (VLAN 10).', e:'No tocamos la configuración del PC: solo cambiamos de puerto.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.10.12', o:PING_OK('192.168.10.12'), e:'Repetimos el ping.', r:'Funciona. La VLAN la decide el PUERTO, no el PC.'},
+  {d:'note', c:'<b>Acción:</b> el alumno B vuelve a <b>port1.0.3</b> y cambia su IP a <b>192.168.20.11</b> /24 (SW2: .21 · SW3: .31).', e:'Ese es el direccionamiento definitivo de la VLAN 20 para el resto del curso.'},
+  {d:'SW1', c:'copy running-config startup-config', o:O.saved, e:'Guardamos.', r:'[OK]'}
+ ]});
+
+/* ---------- Día 20 ---------- */
+L.push({id:'p3', g:'d20', t:'P3 · Trunk entre switches', goal:'Unir los tres switches con trunks 802.1Q para que las VLAN 10 y 20 crucen de un switch a otro.',
+ start:{SW1:{host:'SW1',mode:'priv'}}, cab:['C1','C2'],
+ steps:[
+  {d:'note', c:'<b>Cables:</b> C1 (SW1 port1.0.8 ↔ SW2 port1.0.7) y C2 (SW2 port1.0.8 ↔ SW3 port1.0.7). Todavía <b>no</b> el C3.', e:'Los mismos comandos en los tres switches.'},
+  {d:'SW1', c:'configure terminal', e:'', r:'SW1(config)#'},
+  {d:'SW1', c:'interface port1.0.7-1.0.8', e:'Los dos puertos que van hacia otros switches.', r:'SW1(config-if)#'},
+  {d:'SW1', c:'switchport mode trunk', e:'Modo trunk: varias VLAN por el mismo cable, cada trama con su etiqueta 802.1Q (4.4).', r:'Sin mensaje.'},
+  {d:'SW1', c:'switchport trunk allowed vlan add 10,20', e:'En AW+ un trunk no lleva ninguna VLAN etiquetada hasta que se la añades. Añadimos la 10 y la 20.', r:'Sin mensaje.'},
+  {d:'SW1', c:'end', e:'', r:'SW1#'},
+  {d:'SW1', c:'show vlan brief', o:O.vlanP3, e:'Los puertos 7 y 8 aparecen ahora en las dos VLAN con (t): tagged, con etiqueta.', r:'port1.0.7(t) y port1.0.8(t) en las VLAN 10 y 20.'},
+  {d:'SW1', c:'show interface switchport interface port1.0.8', o:`Interface name            : port1.0.8
+Switchport mode           : trunk
+Ingress filter            : enable
+Acceptable frame types    : all
+Default Vlan              : 1
+Configured Vlans          : 1 10 20`, e:'Detalle del puerto: modo trunk, VLAN nativa (Default Vlan, la que viaja sin etiqueta) y VLAN permitidas.', r:'Modo trunk, nativa 1, VLAN 10 y 20.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.10.31', o:PING_OK('192.168.10.31'), e:'El PC A de SW1 hace ping al PC A de SW3, atravesando SW2.', r:'Funciona: la VLAN 10 cruza los dos trunks.'},
+  {d:'SW1', c:'show mac address-table', o:`VLAN  port             mac             fwd
+10    port1.0.1        0050.56a1.0b11  forward   dynamic
+10    port1.0.8        0050.56a1.0b31  forward   dynamic
+20    port1.0.3        0050.56a1.0b12  forward   dynamic`, e:'La MAC del PC de SW3 aparece aprendida en port1.0.8: para SW1, todo lo de fuera está "al otro lado del trunk".', r:'MAC remota en port1.0.8, VLAN 10.'}
+ ]});
+
+L.push({id:'p4', g:'d20', t:'P4 · Spanning Tree: cerrar el triángulo', goal:'Crear un camino redundante sin provocar una tormenta de broadcast, y ver cómo STP duerme un enlace.',
+ start:{SW1:{host:'SW1',mode:'priv'},SW3:{host:'SW3',mode:'priv'}}, cab:['C1','C2'],
+ steps:[
+  {d:'SW1', c:'show spanning-tree brief', o:`${STPH(ID2,ID1,5008,32768,20000)}
+port1.0.1    ${ID1}     8001      Designated   Forwarding
+port1.0.3    ${ID1}     8003      Designated   Forwarding
+port1.0.8    ${ID2}     8007      Rootport     Forwarding`, e:'Antes de cerrar el bucle, comprobamos que STP está activo. Si no lo estuviera: configure terminal · spanning-tree enable. NO se sigue sin esto.', r:'"Spanning Tree Enabled". La raíz (Root Id …0a17) es SW2: con la misma prioridad, gana la MAC más baja.'},
+  {d:'note', c:'<b>Acción del profesor:</b> conecta el cable <b>C3</b> (SW3 port1.0.8 ↔ SW1 port1.0.7).', cab:['C1','C2','C3'], blk:'C3', e:'Ahora hay un bucle físico: SW1 → SW2 → SW3 → SW1. Sin STP, la red se caería en segundos.', r:'La red NO se cae.'},
+  {d:'SW3', c:'show spanning-tree brief', o:`${STPH(ID2,ID3,5007,32768,20000)}
+port1.0.1    ${ID3}     8001      Designated   Forwarding
+port1.0.3    ${ID3}     8003      Designated   Forwarding
+port1.0.7    ${ID2}     8008      Rootport     Forwarding
+port1.0.8    ${ID1}     8007      Alternate    Discarding`, e:'Miramos en SW3. Su port1.0.8 (el del cable C3) está en Alternate / Discarding: dormido.', r:'Un enlace del triángulo bloqueado. Dibujadlo en la pizarra.'},
+  {d:'SW1', c:'configure terminal', e:'Queremos que la raíz sea SW1 (el que elegimos nosotros, no el que tenga la MAC más baja).', r:''},
+  {d:'SW1', c:'spanning-tree priority 4096', e:'Menor prioridad = más papeletas para ser raíz. 4096 < 32768.', r:'Sin mensaje.'},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'SW1', c:'show spanning-tree brief', o:`${STPH(ID1R,ID1R,0,4096,0)}
+port1.0.1    ${ID1R}     8001      Designated   Forwarding
+port1.0.3    ${ID1R}     8003      Designated   Forwarding
+port1.0.7    ${ID1R}     8007      Designated   Forwarding
+port1.0.8    ${ID1R}     8008      Designated   Forwarding`, blk:'C2', e:'Root Id y Bridge Id son ahora el mismo: SW1 es la raíz. Todos sus puertos son Designated.', r:'Root Path Cost 0: SW1 es la raíz.'},
+  {d:'SW3', c:'show spanning-tree brief', o:`${STPH(ID1R,ID3,5008,32768,20000)}
+port1.0.7    ${'80000000cd240a17'}     8008      Alternate    Discarding
+port1.0.8    ${ID1R}     8007      Rootport     Forwarding`, e:'El enlace dormido ha cambiado de sitio: ahora es el C2 (SW2–SW3).', r:'En SW3, port1.0.7 en Alternate / Discarding.'},
+  {d:'PC', lab:'PC A · SW2', c:'ping -t 192.168.10.31', o:`Haciendo ping a 192.168.10.31 con 32 bytes de datos:
+Respuesta desde 192.168.10.31: bytes=32 tiempo=1ms TTL=64
+Respuesta desde 192.168.10.31: bytes=32 tiempo<1m TTL=64
+Respuesta desde 192.168.10.31: bytes=32 tiempo<1m TTL=64`, e:'Ping continuo de SW2 a SW3. Pregunta: si el C2 está dormido, ¿por dónde va? → SW2 → SW1 → SW3.', r:'Responde sin parar.'},
+  {d:'note', c:'<b>Acción del profesor:</b> desconecta el cable <b>C3</b> (SW3–SW1), que está en el camino activo.', cab:['C1','C2'], blk:'', e:'Simulamos que se rompe un cable.'},
+  {d:'PC', lab:'PC A · SW2', c:'', hide:true, o:`Respuesta desde 192.168.10.31: bytes=32 tiempo<1m TTL=64
+Tiempo de espera agotado para esta solicitud.
+Respuesta desde 192.168.10.31: bytes=32 tiempo=2ms TTL=64
+Respuesta desde 192.168.10.31: bytes=32 tiempo<1m TTL=64`, e:'El ping sigue en marcha.', r:'Se pierde 1 respuesta (o 2) y vuelve: STP (RSTP) ha despertado el C2.'},
+  {d:'SW3', c:'show spanning-tree brief', o:`${STPH(ID1R,ID3,5007,32768,40000)}
+port1.0.7    ${'80000000cd240a17'}     8008      Rootport     Forwarding`, e:'El puerto que estaba dormido ahora es el camino hacia la raíz.', r:'port1.0.7 en Rootport / Forwarding. Coste 40000: dos saltos hasta la raíz.'}
+ ]});
+
+L.push({id:'p5', g:'d20', t:'P5 · LACP: dos cables, un canal', goal:'Agrupar dos cables entre SW1 y SW2 en un solo enlace lógico (po1): más capacidad y redundancia.',
+ start:{SW1:{host:'SW1',mode:'priv'}}, cab:['C1','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'note', c:'<b>Cables:</b> el profesor retira el <b>C1</b> y conecta <b>C4 y C5</b>: SW1 port1.0.5 ↔ SW2 port1.0.5 y SW1 port1.0.6 ↔ SW2 port1.0.6.', cab:['LAG','C2','C3'], blk:'C2', e:'Lo mismo en SW1 y en SW2.'},
+  {d:'SW1', c:'configure terminal', e:'', r:''},
+  {d:'SW1', c:'interface port1.0.5-1.0.6', e:'Los dos puertos que formarán el canal.', r:'SW1(config-if)#'},
+  {d:'SW1', c:'channel-group 1 mode active', e:'Los metemos en el canal 1 con LACP en modo activo (negocia con el otro lado). Se crea la interfaz lógica po1.', r:'Sin mensaje.'},
+  {d:'SW1', c:'exit', e:'', r:''},
+  {d:'SW1', c:'interface po1', e:'La configuración de VLAN se pone en el canal (po1), no en cada cable.', r:'SW1(config-if)#'},
+  {d:'SW1', c:'switchport mode trunk', e:'', r:''},
+  {d:'SW1', c:'switchport trunk allowed vlan add 10,20', e:'', r:''},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'SW1', c:'show etherchannel', o:`LACP Link Aggregation
+ Aggregator po1 (IfIndex: 4601)
+  Link: port1.0.5 (IfIndex: 5005) sync: 1
+  Link: port1.0.6 (IfIndex: 5006) sync: 1`, e:'El canal po1 con sus dos enlaces, los dos sincronizados.', r:'Dos enlaces con sync: 1.'},
+  {d:'SW1', c:'show spanning-tree brief', o:`${STPH(ID1R,ID1R,0,4096,0)}
+port1.0.1    ${ID1R}     8001      Designated   Forwarding
+port1.0.3    ${ID1R}     8003      Designated   Forwarding
+port1.0.7    ${ID1R}     8007      Designated   Forwarding
+po1          ${ID1R}     81f5      Designated   Forwarding`, e:'STP ve po1 como UN solo puerto. Por eso no bloquea uno de los dos cables.', r:'Aparece po1, no port1.0.5 ni port1.0.6.'},
+  {d:'note', c:'<b>Acción:</b> con un ping -t en marcha de SW1 a SW2, desconectad el cable de <b>port1.0.5</b>.', e:'Probamos la redundancia.'},
+  {d:'SW1', c:'show etherchannel', o:`LACP Link Aggregation
+ Aggregator po1 (IfIndex: 4601)
+  Link: port1.0.6 (IfIndex: 5006) sync: 1`, e:'El canal sigue vivo con un solo cable.', r:'El ping no se corta (como mucho se pierde una respuesta).'}
+ ]});
+
+L.push({id:'p6', g:'d20', t:'P6 · LLDP y el caso de la VLAN 20', goal:'Descubrir quién está conectado a cada puerto y resolver la avería típica: una VLAN que no pasa por el trunk.',
+ start:{SW1:{host:'SW1',mode:'priv'},SW2:{host:'SW2',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'SW1', c:'configure terminal', e:'', r:''},
+  {d:'SW1', c:'lldp run', e:'Activa LLDP, el protocolo estándar de descubrimiento de vecinos. En AW+ viene apagado.', r:'Sin mensaje. Lo mismo en los tres switches.'},
+  {d:'SW1', c:'end', e:'Esperad unos 30 segundos.', r:''},
+  {d:'SW1', c:'show lldp neighbors', o:`Index Local Port   Chassis ID       Port ID      Sys Name
+----------------------------------------------------------------
+1     port1.0.5    0000.cd24.0a17   port1.0.5    SW2
+2     port1.0.6    0000.cd24.0a17   port1.0.6    SW2
+3     port1.0.7    0000.cd24.0a52   port1.0.8    SW3`, e:'Por cada puerto: quién es el vecino y en qué puerto suyo está el cable.', r:'Con esto se dibuja la red sin mirar los cables. Tu mapa del tesoro.'},
+  {d:'note', c:'<b>Caso real:</b> el profesor retira el <b>C3</b> (la red queda en línea) y, en secreto, quita la VLAN 20 del trunk de SW2 hacia SW3.', cab:['LAG','C2'], blk:'', e:'Los alumnos solo conocen el síntoma.'},
+  {d:'PC', lab:'PC B · SW3', c:'ping 192.168.20.11', o:PING_KO('192.168.20.11'), e:'Síntoma: los PC de la VLAN 20 de SW3 no ven a los de SW1 y SW2. Los de la VLAN 10, sí.', r:'Falla.'},
+  {d:'SW2', c:'show interface brief', o:`Interface             Status          Protocol
+port1.0.1             admin up        running
+port1.0.3             admin up        running
+port1.0.5             admin up        running
+port1.0.6             admin up        running
+port1.0.8             admin up        running
+po1                   admin up        running`, e:'Paso 1 del diagnóstico: ¿el trunk está activo? (capa 1 y 2).', r:'Sí: port1.0.8 running.'},
+  {d:'SW2', c:'show vlan brief', o:`${VBH}
+1       default          STATIC  ACTIVE  port1.0.7(u) port1.0.9(u) port1.0.10(u)
+10      ADMIN            STATIC  ACTIVE  port1.0.1(u) port1.0.2(u)
+                                         po1(t) port1.0.8(t)
+20      INVITADOS        STATIC  ACTIVE  port1.0.3(u) port1.0.4(u)
+                                         po1(t)`, e:'Pasos 2 y 3: ¿existe la VLAN 20? ¿Pasa por el trunk? Comparad la VLAN 10 con la 20.', r:'¡En la VLAN 20 falta port1.0.8(t)! Esa es la avería.'},
+  {d:'SW2', c:'configure terminal', e:'Lo arreglamos.', r:''},
+  {d:'SW2', c:'interface port1.0.8', e:'', r:''},
+  {d:'SW2', c:'switchport trunk allowed vlan add 20', e:'Volvemos a permitir la VLAN 20 en el trunk.', r:''},
+  {d:'SW2', c:'end', e:'', r:''},
+  {d:'PC', lab:'PC B · SW3', c:'ping 192.168.20.11', o:PING_OK('192.168.20.11'), e:'Repetimos la prueba.', r:'Funciona. Caso cerrado.'}
+ ]});
+
+/* ---------- Día 21 ---------- */
+L.push({id:'p7', g:'d21', t:'P7 · Port mirroring con Wireshark', goal:'Copiar el tráfico de un puerto a otro para analizarlo, sin que el equipo vigilado se entere.',
+ start:{SW1:{host:'SW1',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'SW1', c:'configure terminal', e:'', r:''},
+  {d:'SW1', c:'interface port1.0.4', e:'Entramos en el puerto de DESTINO: donde conectaremos el analizador.', r:'SW1(config-if)#'},
+  {d:'SW1', c:'mirror interface port1.0.1 direction both', e:'Copia aquí todo lo que entra y sale de port1.0.1 (el PC del alumno A).', r:'Sin mensaje.'},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'SW1', c:'show mirror', o:`Mirror Test Port Name: port1.0.4
+Mirror option: Enabled
+Mirror direction: both
+Monitored Port Name: port1.0.1`, e:'Comprobamos el espejo.', r:'Origen port1.0.1, destino port1.0.4, both.'},
+  {d:'note', c:'<b>Acción:</b> el alumno B conecta su PC a <b>port1.0.4</b> y abre <b>Wireshark</b> en la tarjeta cableada.', e:'Recordad: solo en redes propias y con autorización (4.9).'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.10.21', o:PING_OK('192.168.10.21'), e:'El alumno A genera tráfico.', r:''},
+  {d:'WS', c:'', o:`No.  Origen          Destino          Protocolo  Info
+14   0050.56a1.0b11  Broadcast        ARP        ¿Quién tiene 192.168.10.21? Avisa a 192.168.10.11
+15   0050.56a1.0b21  0050.56a1.0b11   ARP        192.168.10.21 está en 0050.56a1.0b21
+16   192.168.10.11   192.168.10.21    ICMP       Echo (ping) request
+17   192.168.10.21   192.168.10.11    ICMP       Echo (ping) reply`, e:'Lo que ve el alumno B en Wireshark (filtro: icmp or arp).', r:'El ping del alumno A, aunque el PC B está en la VLAN 20 y ese tráfico no va para él. Y el ARP de 3.4.'},
+  {d:'SW1', c:'configure terminal', e:'Al terminar, se quita el espejo.', r:''},
+  {d:'SW1', c:'interface port1.0.4', e:'', r:''},
+  {d:'SW1', c:'no mirror interface port1.0.1', e:'"no" deshace el comando.', r:''},
+  {d:'SW1', c:'end', e:'El alumno B vuelve a port1.0.3.', r:''}
+ ]});
+
+L.push({id:'p8', g:'d21', t:'P8 · Laboratorio: reconstruir desde cero', goal:'Copia de seguridad, borrado y reconstrucción completa del switch. Sirve de chuleta para comprobar el resultado.',
+ start:{SW1:{host:'SW1',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'SW1', c:'copy running-config flash:/vlanes.cfg', o:`Building configuration...
+[OK]`, e:'Regla 6 del buen técnico: copia de seguridad ANTES de tocar nada.', r:'Archivo vlanes.cfg guardado en la flash.'},
+  {d:'SW1', c:'erase startup-config', o:`Deleting..
+Successful operation`, e:'Borra la configuración guardada.', r:''},
+  {d:'SW1', c:'reboot', o:`reboot system? (y/n): y
+
+Restarting system.
+
+...arranque...
+`, set:{host:'awplus',mode:'login'}, e:'Reiniciamos: arrancará sin configuración.', r:'Vuelve a pedir el login.'},
+  {d:'SW1', c:'manager', e:'', r:''},
+  {d:'SW1', c:'friend', hide:true, e:'', r:'awplus> : de fábrica.'},
+  {d:'SW1', c:'enable', e:'A partir de aquí, cada pareja reconstruye SIN mirar la guía. Esta es la solución.', r:''},
+  {d:'SW1', c:'configure terminal', e:'', r:''},
+  {d:'SW1', c:'hostname SW1', e:'', r:''},
+  {d:'SW1', c:'vlan database', e:'', r:''},
+  {d:'SW1', c:'vlan 10 name ADMIN', e:'', r:''},
+  {d:'SW1', c:'vlan 20 name INVITADOS', e:'', r:''},
+  {d:'SW1', c:'exit', e:'', r:''},
+  {d:'SW1', c:'interface port1.0.1-1.0.2', e:'', r:''},
+  {d:'SW1', c:'switchport access vlan 10', e:'Los puertos ya son access por defecto: basta con la VLAN.', r:''},
+  {d:'SW1', c:'interface port1.0.3-1.0.4', e:'Desde una interfaz se puede saltar directamente a otra, sin exit.', r:''},
+  {d:'SW1', c:'switchport access vlan 20', e:'', r:''},
+  {d:'SW1', c:'interface port1.0.7-1.0.8', e:'', r:''},
+  {d:'SW1', c:'switchport mode trunk', e:'', r:''},
+  {d:'SW1', c:'switchport trunk allowed vlan add 10,20', e:'', r:''},
+  {d:'SW1', c:'interface port1.0.5-1.0.6', e:'Solo SW1 y SW2.', r:''},
+  {d:'SW1', c:'channel-group 1 mode active', e:'', r:''},
+  {d:'SW1', c:'interface po1', e:'', r:''},
+  {d:'SW1', c:'switchport mode trunk', e:'', r:''},
+  {d:'SW1', c:'switchport trunk allowed vlan add 10,20', e:'', r:''},
+  {d:'SW1', c:'exit', e:'', r:''},
+  {d:'SW1', c:'spanning-tree priority 4096', e:'Solo SW1.', r:''},
+  {d:'SW1', c:'lldp run', e:'', r:''},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'SW1', c:'copy running-config startup-config', o:O.saved, e:'Prueba final: todos los PC A se ven entre sí, y todos los PC B también.', r:'[OK]. Si alguien se atasca: copy flash:/vlanes.cfg startup-config y reboot.'}
+ ]});
+
+/* ---------- Día 22 ---------- */
+L.push({id:'p10', g:'d22', t:'P10 · Tres switches, tres routers', goal:'Los x230 son switches de capa 3: con una IP en cada VLAN, enrutan. Montamos SW1–SW2–SW3 como tres routers.',
+ start:{SW2:{host:'awplus',mode:'priv'}}, cab:['C1','C2'], route:true,
+ steps:[
+  {d:'note', c:'<b>Antes:</b> en los tres, <b>erase startup-config</b> + <b>reboot</b>. Cables: solo C1 (SW1 p8 ↔ SW2 p7) y C2 (SW2 p8 ↔ SW3 p7).', e:'La configuración de VLAN quedó guardada ayer en flash:/vlanes.cfg. Hoy cambia el direccionamiento: SW1 = 172.16.1.0/24, SW2 = 172.16.2.0/24, SW3 = 172.16.3.0/24.'},
+  {d:'SW2', c:'configure terminal', e:'Configuramos SW2, el del medio. SW1 y SW3 hacen lo mismo con sus datos.', r:''},
+  {d:'SW2', c:'hostname SW2', e:'', r:''},
+  {d:'SW2', c:'vlan database', e:'Tres VLAN: la LAN de los PC y una por cada enlace con otro switch.', r:''},
+  {d:'SW2', c:'vlan 10 name LAN', e:'', r:''},
+  {d:'SW2', c:'vlan 12 name ENLACE-12', e:'El número dice qué une: SW1 con SW2.', r:''},
+  {d:'SW2', c:'vlan 23 name ENLACE-23', e:'SW2 con SW3.', r:''},
+  {d:'SW2', c:'exit', e:'', r:''},
+  {d:'SW2', c:'interface port1.0.1-1.0.4', e:'', r:''},
+  {d:'SW2', c:'switchport access vlan 10', e:'Los cuatro puertos de PC, en la LAN.', r:''},
+  {d:'SW2', c:'interface port1.0.7', e:'Hacia SW1.', r:''},
+  {d:'SW2', c:'switchport access vlan 12', e:'', r:''},
+  {d:'SW2', c:'interface port1.0.8', e:'Hacia SW3.', r:''},
+  {d:'SW2', c:'switchport access vlan 23', e:'', r:''},
+  {d:'SW2', c:'interface vlan10', e:'Ahora no es un puerto: es la interfaz IP de la VLAN 10 (la "pata" del router en esa red).', r:'SW2(config-if)#'},
+  {d:'SW2', c:'ip address 172.16.2.1/24', e:'En AW+ la máscara se escribe en formato /24. Esta será la puerta de enlace de los PC de SW2.', r:'Sin mensaje.'},
+  {d:'SW2', c:'interface vlan12', e:'', r:''},
+  {d:'SW2', c:'ip address 10.0.12.2/30', e:'/30: 2 hosts útiles, uno por cada extremo del enlace (2.3).', r:''},
+  {d:'SW2', c:'interface vlan23', e:'', r:''},
+  {d:'SW2', c:'ip address 10.0.23.1/30', e:'', r:''},
+  {d:'SW2', c:'end', e:'', r:''},
+  {d:'SW2', c:'show ip interface brief', o:`Interface        IP-Address         Status          Protocol
+lo               unassigned         admin up        running
+vlan1            unassigned         admin up        down
+vlan10           172.16.2.1         admin up        running
+vlan12           10.0.12.2          admin up        running
+vlan23           10.0.23.1          admin up        running`, e:'Las tres interfaces IP.', r:'vlan10, vlan12 y vlan23 con su IP y running.'},
+  {d:'SW2', c:'show ip route', o:`${ROUTEH}
+C       10.0.12.0/30 is directly connected, vlan12
+C       10.0.23.0/30 is directly connected, vlan23
+C       172.16.2.0/24 is directly connected, vlan10`, e:'La tabla de rutas (5.2). Solo hay rutas C: las redes conectadas directamente.', r:'Tres rutas C.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 172.16.3.11', o:PING_KO('172.16.3.11'), e:'Desde SW1 hasta un PC de SW3.', r:'Falla: SW1 no tiene ninguna ruta hacia 172.16.3.0/24. Reto: ¿qué rutas le faltan a cada switch?'}
+ ]});
+
+/* ---------- Día 23 ---------- */
+L.push({id:'p11', g:'d23', t:'P11 · Rutas estáticas: "llega pero no vuelve"', goal:'Añadir las rutas que faltan una a una, probando después de cada una, hasta que el ping funcione.',
+ start:{SW1:{host:'SW1',mode:'priv'},SW2:{host:'SW2',mode:'priv'},SW3:{host:'SW3',mode:'priv'}}, cab:['C1','C2'], route:true,
+ steps:[
+  {d:'SW1', c:'configure terminal', e:'SW1 es una red "de extremo": todo lo que no es suyo, se lo manda a SW2.', r:''},
+  {d:'SW1', c:'ip route 0.0.0.0/0 10.0.12.2', e:'Ruta por defecto: "si no sé dónde está, a 10.0.12.2 (SW2)".', r:''},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'PC', lab:'PC A · SW1', c:'ping 172.16.3.11', o:PING_KO('172.16.3.11'), e:'Primera prueba.', r:'Falla: el paquete llega a SW2, pero SW2 no sabe llegar a 172.16.3.0.'},
+  {d:'SW2', c:'configure terminal', e:'', r:''},
+  {d:'SW2', c:'ip route 172.16.3.0/24 10.0.23.2', e:'SW2 aprende a llegar a la red de SW3.', r:''},
+  {d:'SW2', c:'end', e:'', r:''},
+  {d:'PC', lab:'PC A · SW1', c:'ping 172.16.3.11', o:PING_KO('172.16.3.11'), e:'Segunda prueba.', r:'Sigue fallando. El PC de SW3 SÍ recibe el ping (se ve en Wireshark), pero SW3 no sabe volver a 172.16.1.0. ¡Llega pero no vuelve!'},
+  {d:'SW3', c:'configure terminal', e:'', r:''},
+  {d:'SW3', c:'ip route 0.0.0.0/0 10.0.23.1', e:'SW3 también es de extremo: ruta por defecto hacia SW2.', r:''},
+  {d:'SW3', c:'end', e:'', r:''},
+  {d:'PC', lab:'PC A · SW1', c:'ping 172.16.3.11', o:PING_KO('172.16.3.11'), e:'Tercera prueba.', r:'Todavía falla: la respuesta sale de SW3, pero SW2 no sabe llegar a 172.16.1.0.'},
+  {d:'SW2', c:'configure terminal', e:'', r:''},
+  {d:'SW2', c:'ip route 172.16.1.0/24 10.0.12.1', e:'La última pieza: SW2 aprende a llegar a la red de SW1.', r:''},
+  {d:'SW2', c:'end', e:'', r:''},
+  {d:'PC', lab:'PC A · SW1', c:'ping 172.16.3.11', o:PING_OK('172.16.3.11').replace(/TTL=64/g,'TTL=125'), e:'Cuarta prueba.', r:'¡Funciona! Fijaos en el TTL: ha bajado 3 (uno por router) (3.8).'},
+  {d:'PC', lab:'PC A · SW1', c:'tracert 172.16.3.11', o:`Traza a 172.16.3.11 sobre caminos de 30 saltos como máximo:
+
+  1    <1 ms    <1 ms    <1 ms  172.16.1.1
+  2     1 ms    <1 ms    <1 ms  10.0.12.2
+  3     1 ms     1 ms    <1 ms  10.0.23.2
+  4     1 ms     1 ms     1 ms  172.16.3.11
+
+Traza completa.`, e:'El camino salto a salto.', r:'SW1 → SW2 → SW3 → destino.'},
+  {d:'SW2', c:'show ip route', o:`${ROUTEH}
+C       10.0.12.0/30 is directly connected, vlan12
+C       10.0.23.0/30 is directly connected, vlan23
+S       172.16.1.0/24 [1/0] via 10.0.12.1, vlan12
+C       172.16.2.0/24 is directly connected, vlan10
+S       172.16.3.0/24 [1/0] via 10.0.23.2, vlan23`, e:'La tabla de SW2 con las dos rutas estáticas (S).', r:'Dos rutas S además de las C.'},
+  {d:'SW1', c:'show ip route', o:`${ROUTEH}
+Gateway of last resort is 10.0.12.2 to network 0.0.0.0
+
+S*      0.0.0.0/0 [1/0] via 10.0.12.2, vlan12
+C       10.0.12.0/30 is directly connected, vlan12
+C       172.16.1.0/24 is directly connected, vlan10`, e:'La de SW1: la ruta por defecto aparece como S*.', r:'S* 0.0.0.0/0.'}
+ ]});
+
+/* ---------- Día 26 ---------- */
+L.push({id:'p12', g:'d26', t:'P12 · SW3 enruta entre las VLAN', goal:'El "router-on-a-stick" del aula: SW3 recibe las VLAN 10 y 20 por el trunk y enruta entre ellas.',
+ start:{SW3:{host:'SW3',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'note', c:'<b>Antes:</b> cableado del día 21 y, en los tres, <b>copy flash:/vlanes.cfg startup-config</b> + <b>reboot</b>. Los PC vuelven a 192.168.10.x / 192.168.20.x con puerta de enlace .1.', e:'Gracias a la copia del miércoles, rehacer la red cuesta un minuto (regla 6).'},
+  {d:'SW3', c:'configure terminal', e:'Solo en SW3.', r:''},
+  {d:'SW3', c:'interface vlan10', e:'La "subinterfaz" de la VLAN 10. En un router Cisco sería Gi0/0.10 con encapsulation dot1Q 10 (5.7).', r:''},
+  {d:'SW3', c:'ip address 192.168.10.1/24', e:'Puerta de enlace de la VLAN 10.', r:''},
+  {d:'SW3', c:'interface vlan20', e:'', r:''},
+  {d:'SW3', c:'ip address 192.168.20.1/24', e:'Puerta de enlace de la VLAN 20.', r:''},
+  {d:'SW3', c:'end', e:'', r:''},
+  {d:'SW3', c:'show ip interface brief', o:`Interface        IP-Address         Status          Protocol
+lo               unassigned         admin up        running
+vlan1            unassigned         admin up        running
+vlan10           192.168.10.1       admin up        running
+vlan20           192.168.20.1       admin up        running`, e:'', r:'vlan10 y vlan20 con su IP.'},
+  {d:'SW3', c:'show ip route', o:`${ROUTEH}
+C       192.168.10.0/24 is directly connected, vlan10
+C       192.168.20.0/24 is directly connected, vlan20`, e:'SW3 conoce las dos redes porque tiene una pata en cada una.', r:'Dos rutas C.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.20.11', o:PING_OK('192.168.20.11').replace(/TTL=64/g,'TTL=127'), e:'El PC A de SW1 (VLAN 10) hace ping al PC B de SU MISMO switch (VLAN 20).', r:'Funciona: las VLAN ya se hablan. TTL 127: ha pasado por un router.'},
+  {d:'PC', lab:'PC A · SW1', c:'tracert 192.168.20.11', o:`Traza a 192.168.20.11 sobre caminos de 30 saltos como máximo:
+
+  1    <1 ms    <1 ms    <1 ms  192.168.10.1
+  2     1 ms    <1 ms    <1 ms  192.168.20.11
+
+Traza completa.`, e:'Pregunta: los dos PC están en el mismo switch, ¿por dónde va el ping? → Sube por el trunk hasta SW3, que lo enruta, y vuelve a bajar. Es el "palo".', r:'Primer salto: 192.168.10.1 (SW3).'},
+  {d:'SW3', c:'show arp', o:`IP Address      MAC Address     Interface   Port         Type
+192.168.10.11   0050.56a1.0b11  vlan10      port1.0.8    dynamic
+192.168.20.11   0050.56a1.0b12  vlan20      port1.0.8    dynamic`, e:'SW3 ha aprendido las MAC de los dos PC de SW1, y los dos le llegan por el mismo trunk (port1.0.8, cable C3).', r:'Dos entradas, mismo puerto, distinta VLAN.'}
+ ]});
+
+L.push({id:'p13', g:'d26', t:'P13 · ACL: los invitados no entran en Administración', goal:'Filtrar el tráfico de la VLAN 20 hacia la VLAN 10 con una ACL en el puerto del invitado, cerca del origen.',
+ start:{SW1:{host:'SW1',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'SW1', c:'configure terminal', e:'Cada pareja en su switch.', r:''},
+  {d:'SW1', c:'access-list 3000 deny ip 192.168.20.0/24 192.168.10.0/24', e:'ACL de hardware (en AW+ van del 3000 al 3699): prohibido de la red de invitados a la red de administración.', r:'Sin mensaje.'},
+  {d:'SW1', c:'interface port1.0.3', e:'El puerto del PC invitado: filtramos cerca del origen.', r:''},
+  {d:'SW1', c:'access-group 3000', e:'Aplicamos la ACL a lo que ENTRA por este puerto.', r:''},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'SW1', c:'show access-list', o:`Hardware IP access list 3000
+    deny ip 192.168.20.0/24 192.168.10.0/24`, e:'', r:'La ACL 3000 con su regla.'},
+  {d:'PC', lab:'PC B · SW1', c:'ping 192.168.10.11', o:PING_KO('192.168.10.11'), e:'El invitado intenta llegar a Administración.', r:'Falla: bloqueado.'},
+  {d:'PC', lab:'PC B · SW1', c:'ping 192.168.20.1', o:PING_OK('192.168.20.1'), e:'¿Y a su puerta de enlace? No hemos escrito ningún permit…', r:'Funciona. En las ACL de hardware de AW+, lo que no coincide pasa: al revés que el deny implícito de Cisco (5.6). Comprobadlo.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping 192.168.20.11', o:PING_KO('192.168.20.11'), e:'Pregunta con trampa: ahora es Administración quien hace ping al invitado.', r:'Falla. La petición llega, pero la RESPUESTA (de .20 a .10) entra por port1.0.3 y la ACL la tira. Una ACL no recuerda conversaciones.'},
+  {d:'SW1', c:'configure terminal', e:'Para terminar, se quita la ACL.', r:''},
+  {d:'SW1', c:'interface port1.0.3', e:'', r:''},
+  {d:'SW1', c:'no access-group 3000', e:'', r:''},
+  {d:'SW1', c:'end', e:'Guardad sin la ACL.', r:''}
+ ]});
+
+/* ---------- Día 27 ---------- */
+L.push({id:'p14', g:'d27', t:'P14 · VLAN de gestión y SNMP', goal:'Preparar los switches para Zabbix: una VLAN de gestión (99) con IP en cada switch y SNMP de solo lectura.',
+ start:{SW1:{host:'SW1',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'SW1', c:'configure terminal', e:'Buena práctica (4.4): no gestionar por la VLAN 1. Creamos la 99.', r:''},
+  {d:'SW1', c:'vlan database', e:'', r:''},
+  {d:'SW1', c:'vlan 99 name GESTION', e:'', r:''},
+  {d:'SW1', c:'exit', e:'', r:''},
+  {d:'SW1', c:'interface port1.0.7-1.0.8', e:'La VLAN 99 tiene que cruzar los trunks…', r:''},
+  {d:'SW1', c:'switchport trunk allowed vlan add 99', e:'', r:''},
+  {d:'SW1', c:'interface po1', e:'…y el canal LACP (solo SW1 y SW2).', r:''},
+  {d:'SW1', c:'switchport trunk allowed vlan add 99', e:'En SW3, además: interface port1.0.5 · switchport access vlan 99 (portátil del profesor).', r:''},
+  {d:'SW1', c:'interface vlan99', e:'', r:''},
+  {d:'SW1', c:'ip address 192.168.99.11/24', e:'SW2: .12 · SW3: .13. El portátil de Zabbix es el .100.', r:''},
+  {d:'SW1', c:'exit', e:'', r:''},
+  {d:'SW1', c:'snmp-server', e:'Activa el agente SNMP.', r:''},
+  {d:'SW1', c:'snmp-server community gesred ro', e:'Comunidad de solo lectura (ro). Nada de "public": es la llave debajo del felpudo (6.4).', r:''},
+  {d:'SW1', c:'end', e:'', r:''},
+  {d:'SW1', c:'copy running-config startup-config', o:O.saved, e:'', r:'[OK]'},
+  {d:'PROFE', c:'ping -c 2 192.168.99.11', o:`PING 192.168.99.11 56(84) bytes of data.
+64 bytes from 192.168.99.11: icmp_seq=1 ttl=64 time=1.12 ms
+64 bytes from 192.168.99.11: icmp_seq=2 ttl=64 time=0.98 ms`, e:'Desde el portátil del profesor (el futuro servidor Zabbix).', r:'Responde.'},
+  {d:'PROFE', c:'snmpget -v2c -c gesred 192.168.99.11 1.3.6.1.2.1.1.5.0', o:`SNMPv2-MIB::sysName.0 = STRING: SW1`, e:'Le preguntamos su nombre por SNMP. 1.3.6.1.2.1.1.5.0 es el OID de sysName.', r:'STRING: SW1.'},
+  {d:'PROFE', c:'snmpwalk -v2c -c gesred 192.168.99.11 1.3.6.1.2.1.2.2.1.8', o:`IF-MIB::ifOperStatus.5001 = INTEGER: up(1)
+IF-MIB::ifOperStatus.5002 = INTEGER: down(2)
+IF-MIB::ifOperStatus.5003 = INTEGER: up(1)
+IF-MIB::ifOperStatus.5004 = INTEGER: down(2)
+IF-MIB::ifOperStatus.5005 = INTEGER: up(1)
+IF-MIB::ifOperStatus.5006 = INTEGER: up(1)
+IF-MIB::ifOperStatus.5007 = INTEGER: up(1)
+IF-MIB::ifOperStatus.5008 = INTEGER: down(2)`, e:'ifOperStatus de todas las interfaces (6.4). 5001 = port1.0.1, 5002 = port1.0.2…', r:'up(1) donde hay cable, down(2) donde no. Es justo lo que vigilará Zabbix.'},
+  {d:'PROFE', c:'snmpget -v2c -c public 192.168.99.11 1.3.6.1.2.1.1.5.0', o:`Timeout: No Response from 192.168.99.11.`, e:'Probamos con la comunidad por defecto.', r:'Timeout: "public" no existe. Bien.'}
+ ]});
+
+/* ---------- Día 28 ---------- */
+L.push({id:'p15', g:'d28', t:'P15-P16 · Zabbix: enlace caído → alerta', goal:'La cadena completa del 6.6: se rompe un cable, STP lo rodea, nadie lo nota… salvo Zabbix.',
+ start:{SW3:{host:'SW3',mode:'priv'}}, cab:['LAG','C2','C3'], blk0:'C2',
+ steps:[
+  {d:'note', c:'<b>Zabbix:</b> Data collection → Hosts → Create host · <b>SW1</b> · interfaz SNMP 192.168.99.11 · SNMPv2 · macro {$SNMP_COMMUNITY} = <b>gesred</b> · plantilla <b>Network Generic Device by SNMP</b>. Igual con SW2 (.12) y SW3 (.13).', e:'Lo hace el profesor en el proyector y cada pareja le dicta los datos de su switch.', r:'A los 1–2 minutos, el icono SNMP de los tres hosts en verde.'},
+  {d:'ZBX', c:'', o:`Monitoring → Problems
+Sin problemas.`, e:'Abrimos la lista de problemas en el proyector.', r:'Vacía.'},
+  {d:'PC', lab:'PC A · SW1', c:'ping -t 192.168.10.31', o:`Haciendo ping a 192.168.10.31 con 32 bytes de datos:
+Respuesta desde 192.168.10.31: bytes=32 tiempo=1ms TTL=64
+Respuesta desde 192.168.10.31: bytes=32 tiempo<1m TTL=64`, e:'Un usuario cualquiera trabajando: va por el cable C3, el camino activo.', r:''},
+  {d:'note', c:'<b>Acción del profesor:</b> desconecta el cable <b>C3</b> (SW3 port1.0.8 ↔ SW1 port1.0.7).', cab:['LAG','C2'], blk:'', e:'Se "rompe" un cable.'},
+  {d:'PC', lab:'PC A · SW1', c:'', hide:true, o:`Respuesta desde 192.168.10.31: bytes=32 tiempo<1m TTL=64
+Tiempo de espera agotado para esta solicitud.
+Respuesta desde 192.168.10.31: bytes=32 tiempo=1ms TTL=64`, e:'El ping sigue.', r:'Se pierde una respuesta: STP despierta el C2. El usuario ni se entera… y no llamará.'},
+  {d:'SW3', c:'show interface brief', o:`Interface             Status          Protocol
+port1.0.7             admin up        running
+port1.0.8             admin up        down`, e:'En el switch se ve la caída.', r:'port1.0.8 down.'},
+  {d:'ZBX', c:'', o:`Hora      Severidad  Host  Problema                              Estado
+16:52:10  Media      SW3   Interface port1.0.8(): Link down      PROBLEM
+16:52:12  Media      SW1   Interface port1.0.7(): Link down      PROBLEM`, e:'A los 1–3 minutos, en Zabbix.', r:'Dos problemas: los dos extremos del cable C3.'},
+  {d:'note', c:'<b>Acción del profesor:</b> vuelve a conectar el cable <b>C3</b>.', cab:['LAG','C2','C3'], blk:'C2', e:''},
+  {d:'ZBX', c:'', o:`Hora      Severidad  Host  Problema                              Estado
+16:52:10  Media      SW3   Interface port1.0.8(): Link down      RESOLVED
+16:52:12  Media      SW1   Interface port1.0.7(): Link down      RESOLVED`, e:'Zabbix avisa también cuando se resuelve (6.5).', r:'RESOLVED en verde.'},
+  {d:'SW3', c:'configure terminal', e:'Variante: apagar el puerto a mano en lugar de quitar el cable.', r:''},
+  {d:'SW3', c:'interface port1.0.8', e:'', r:''},
+  {d:'SW3', c:'shutdown', e:'Según la versión de la plantilla, un puerto apagado a mano puede no generar alerta: Zabbix entiende que lo has apagado a propósito. ¿Tiene sentido? Debatidlo.', r:''},
+  {d:'SW3', c:'no shutdown', e:'Lo volvemos a encender.', r:''},
+  {d:'SW3', c:'end', e:'', r:''}
+ ]});
+
+/* ===================== Estado de la app ===================== */
+const $ = id=>document.getElementById(id);
+const term=$('term');
+let cur=0, step=0, mode='step', typingTimer=null, fontSize=20, typingDone=null;
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const reduced = window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* selector de lecciones */
+(function(){
+  const sel=$('lesson'); let og=null, last=null;
+  L.forEach((l,i)=>{
+    if(l.g!==last){og=document.createElement('optgroup');og.label=G[l.g];sel.appendChild(og);last=l.g}
+    const o=document.createElement('option');o.value=i;o.textContent=l.t;og.appendChild(o);
+  });
+})();
+
+function tagClass(d){return d==='SW1'?'sw1':d==='SW2'?'sw2':d==='SW3'?'sw3':d==='PC'?'pc':'ext'}
+function addLine(tag,cls,parts){
+  const ln=document.createElement('div');ln.className='ln '+(cls||'');
+  const t=document.createElement('span');t.className='tag '+tagClass(tag);t.textContent=tag==='PC'?'PC':tag;
+  const x=document.createElement('span');x.className='txt';
+  parts.forEach(p=>{const s=document.createElement('span');if(p.c)s.className=p.c;s.textContent=p.t;x.appendChild(s)});
+  ln.appendChild(t);ln.appendChild(x);term.appendChild(ln);return x;
+}
+function addOut(tag,text,cls){ if(text==null||text==='')return; addLine(tag,'out '+(cls||''),[{t:text}]) }
+function addNote(html){const n=document.createElement('div');n.className='note';n.innerHTML=html;term.appendChild(n)}
+function scrollEnd(){term.scrollTop=term.scrollHeight}
+
+/* ---------- modo paso a paso ---------- */
+function initStates(l){const s={};const st=l.start||{};Object.keys(st).forEach(k=>s[k]=Object.assign({ifn:''},st[k]));return s}
+function promptFor(d,stt,lab){
+  if(d==='PC') return {t:(lab?lab+' ':'')+'C:\\> ',c:'p-pc'};
+  if(d==='PROFE') return {t:'profe@zabbix:~$ ',c:'p-pc'};
+  const s=stt[d]; return {t:promptOf(s)+' ',c:modeClass(s.mode)};
+}
+function renderStep(idx,animate){
+  clearTimeout(typingTimer); typingDone=null;
+  const l=L[cur]; const steps=l.steps; term.innerHTML='';
+  const stt=initStates(l); let cab=l.cab||null, blk=l.blk0||'', focus=Object.keys(stt)[0]||'SW1';
+  for(let i=0;i<=idx && i<steps.length;i++){
+    const s=steps[i]; const last=(i===idx);
+    if(s.cab) cab=s.cab; if(s.blk!==undefined) blk=s.blk;
+    if(s.d==='note'){addNote(s.c);continue}
+    if(s.d==='WS'||s.d==='ZBX'){addOut(s.d==='WS'?'WSHARK':'ZABBIX',s.o,'');continue}
+    if(/^SW/.test(s.d)){ if(!stt[s.d]) stt[s.d]={host:s.d,mode:'priv',ifn:''}; focus=s.d }
+    const pr=promptFor(s.d,stt,s.lab);
+    const shown = s.hide ? '' : s.c;
+    if(s.d==='PC' && s.hide && !s.c){ addOut('PC',s.o) }
+    else if(last && animate && shown && !reduced){
+      const x=addLine(s.d,'',[{t:pr.t,c:pr.c}]);const ty=document.createElement('span');ty.className='typed';x.appendChild(ty);
+      const car=document.createElement('span');car.className='caret';x.appendChild(car);
+      let k=0; const after=()=>{typingDone=null; car.remove(); finishStep(s,stt); updateSide(stt,focus,cab,blk); scrollEnd()};
+      const tick=()=>{ty.textContent=shown.slice(0,++k);scrollEnd(); if(k<shown.length) typingTimer=setTimeout(tick,22); else typingTimer=setTimeout(after,120)};
+      typingTimer=setTimeout(tick,60);
+      typingDone=()=>{clearTimeout(typingTimer);ty.textContent=shown;after();typingDone=null};
+      updateSide(stt,focus,cab,blk,true); scrollEnd(); return;
+    } else {
+      addLine(s.d,'',[{t:pr.t,c:pr.c},{t:shown,c:'typed'}]);
+      finishStep(s,stt);
+    }
+  }
+  // cursor final
+  const lastS=steps[Math.min(idx,steps.length-1)];
+  updateSide(stt,focus,cab,blk); scrollEnd();
+}
+function finishStep(s,stt){
+  if(s.o) addOut(s.d==='PROFE'?'PROFE':s.d, s.o, s.err?'':'');
+  if(/^SW/.test(s.d)){
+    if(!s.err) transition(stt[s.d], s.c);
+    if(s.set) Object.assign(stt[s.d], s.set);
+  }
+}
+function updateSide(stt,focus,cab,blk,pending){
+  const l=L[cur]; const s=l.steps[step];
+  $('count').textContent=(step+1)+' / '+l.steps.length;
+  $('progBar').style.width=((step+1)/l.steps.length*100)+'%';
+  $('prev').disabled=step===0; $('next').disabled=step>=l.steps.length-1;
+  $('stepHead').textContent='Paso '+(step+1)+(s.d&&s.d!=='note'?' · '+(s.d==='PC'?(s.lab||'PC'):s.d==='PROFE'?'Portátil del profesor':s.d==='WS'?'Wireshark':s.d==='ZBX'?'Zabbix':s.d):' · Acción');
+  $('stepTxt').textContent=s.e||(s.d==='note'?'Acción física en el aula.':'');
+  const ex=$('stepExp'); ex.innerHTML=''; if(s.r){const b=document.createElement('b');b.textContent='Resultado esperado';ex.appendChild(b);ex.appendChild(document.createTextNode(s.r))}
+  const st=stt[focus]||{host:'awplus',mode:'login'};
+  renderLadder(pending? stt[focus] : st, focus);
+  renderTopo(l,cab,blk,focus);
+}
+
+/* ---------- escalera de niveles ---------- */
+function renderLadder(st,dev){
+  const ul=$('ladder'); ul.innerHTML='';
+  const m=st?st.mode:'login';
+  ORDER.forEach(k=>{
+    const li=document.createElement('li');li.className='lv'+(['if','vlan','line','router'].includes(k)?' child':'')+(m===k?' on':'');
+    const pm=document.createElement('span');pm.className='pm '+modeClass(k);pm.textContent=(st&&st.host?st.host:'awplus')+LV[k].pm;
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=LV[k].nm;
+    const how=document.createElement('span');how.className='how';how.textContent='Se entra con: '+ENTER[k]+'. '+LV[k].how;
+    li.append(pm,nm,how);ul.appendChild(li);
+  });
+  const w=$('where');
+  if(!st||m==='login'||m==='pass'){w.innerHTML='<b>Fuera del switch</b> · '+LV.login.how;return}
+  const path=['user','priv']; if(m!=='user'&&m!=='priv')path.push('config'); if(['if','vlan','line','router'].includes(m))path.push(m);
+  if(m==='user')path.length=1; if(m==='priv')path.length=2;
+  w.innerHTML='';
+  const dv=document.createElement('span');dv.textContent=(dev||'')+'  ';w.appendChild(dv);
+  path.forEach((p,i)=>{const b=document.createElement(i===path.length-1?'b':'span');b.textContent=LV[p].nm+(p==='if'&&st.ifn?' '+st.ifn:'');w.appendChild(b);if(i<path.length-1)w.appendChild(document.createTextNode(' › '))});
+}
+
+/* ---------- topología ---------- */
+function renderTopo(l,cab,blk,focus){
+  const card=$('topoCard');
+  if(!cab){card.hidden=true;return} card.hidden=false;
+  const P={SW1:[70,46],SW2:[290,46],SW3:[180,176]};
+  const W=96,H=36;
+  const tok=getComputedStyle(document.documentElement);
+  const acc=tok.getPropertyValue('--accent').trim(), bad=tok.getPropertyValue('--bad').trim(), ink=tok.getPropertyValue('--ink').trim(), mut=tok.getPropertyValue('--muted').trim(), pan=tok.getPropertyValue('--panel').trim(), soft=tok.getPropertyValue('--accent-soft').trim(), ln=tok.getPropertyValue('--line').trim();
+  const L2={C1:['SW1','SW2','p8','p7',0],LAG:['SW1','SW2','p5-6','p5-6',0],C2:['SW2','SW3','p8','p7',0],C3:['SW3','SW1','p8','p7',0]};
+  let s=`<svg viewBox="0 0 360 220" role="img" aria-label="Topología: SW1, SW2 y SW3">`;
+  Object.keys(L2).forEach(k=>{
+    if(!cab.includes(k))return; const [a,b,pa,pb]=L2[k];
+    const A=P[a],B=P[b]; const isB=blk===k; const col=isB?bad:acc;
+    if(k==='LAG'){
+      [-6,6].forEach(o=>{s+=`<line x1="${A[0]}" y1="${A[1]+o}" x2="${B[0]}" y2="${B[1]+o}" stroke="${col}" stroke-width="3"/>`});
+      s+=`<text x="180" y="${A[1]-14}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="11" fill="${mut}">po1 (C4 + C5)</text>`;
+    } else {
+      s+=`<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" stroke="${col}" stroke-width="3" ${isB?'stroke-dasharray="7 6"':''}/>`;
+      const mx=(A[0]+B[0])/2, my=(A[1]+B[1])/2;
+      const off = k==='C1'?[0,-12]: k==='C2'?[22,-2]:[-22,-2];
+      s+=`<text x="${mx+off[0]}" y="${my+off[1]}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="12" font-weight="600" fill="${isB?bad:mut}">${k}${isB?' · STP':''}</text>`;
+    }
+    // etiquetas de puerto cerca de cada extremo
+    const lab=(F,T,txt)=>{const dx=T[0]-F[0],dy=T[1]-F[1],d=Math.hypot(dx,dy);const x=F[0]+dx/d*62,y=F[1]+dy/d*30+(k==='LAG'?16:4);s+=`<text x="${x}" y="${y}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10" fill="${mut}">${txt}</text>`};
+    lab(A,B,pa);lab(B,A,pb);
+  });
+  Object.keys(P).forEach(n=>{const [x,y]=P[n];const f=n===focus;
+    s+=`<rect x="${x-W/2}" y="${y-H/2}" width="${W}" height="${H}" rx="6" fill="${f?soft:pan}" stroke="${f?acc:ln}" stroke-width="${f?2.5:1.5}"/>`;
+    s+=`<text x="${x}" y="${y+5}" text-anchor="middle" font-family="IBM Plex Sans Condensed,Arial Narrow,sans-serif" font-size="16" font-weight="700" fill="${ink}">${n}</text>`;
+    if(l.route){const net={SW1:'172.16.1.0/24',SW2:'172.16.2.0/24',SW3:'172.16.3.0/24'}[n];s+=`<text x="${x}" y="${y+H/2+14}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="10.5" fill="${mut}">${net}</text>`}
+  });
+  s+='</svg>'; $('topo').innerHTML=s;
+}
+
+/* ---------- navegación ---------- */
+function loadLesson(i,st){
+  cur=+i; const l=L[cur]; $('lesson').value=cur;
+  $('lDay').textContent=G[l.g]; $('lTitle').textContent=l.t; $('lGoal').textContent=l.goal||'';
+  store.set('x230.lesson',cur);
+  if(l.free){setMode('free');return}
+  if(mode==='free') setMode('step',true);
+  step=Math.min(st||0,l.steps.length-1); renderStep(step,false); store.set('x230.step',step);
+}
+function go(d){
+  const l=L[cur]; if(mode!=='step'||!l.steps)return;
+  if(typingDone && d>0){typingDone();return}
+  const n=step+d; if(n<0||n>=l.steps.length)return; step=n; store.set('x230.step',step);
+  renderStep(step,d>0);
+}
+$('next').onclick=()=>go(1); $('prev').onclick=()=>go(-1);
+$('restart').onclick=()=>{step=0;renderStep(0,false)};
+$('lesson').onchange=e=>loadLesson(e.target.value,0);
+document.addEventListener('keydown',e=>{
+  if(mode!=='step')return; if(e.target.tagName==='SELECT'||e.target.tagName==='INPUT')return;
+  if(['ArrowRight','PageDown',' '].includes(e.key)){e.preventDefault();go(1)}
+  else if(['ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(-1)}
+  else if(e.key==='Home'){e.preventDefault();step=0;renderStep(0,false)}
+});
+function setFont(v){fontSize=Math.max(13,Math.min(34,v));document.documentElement.style.setProperty('--term-size',fontSize+'px');store.set('x230.font',fontSize)}
+$('fPlus').onclick=()=>setFont(fontSize+2); $('fMinus').onclick=()=>setFont(fontSize-2);
+$('full').onclick=()=>{const el=document.documentElement; try{ if(document.fullscreenElement) document.exitFullscreen(); else if(el.requestFullscreen) el.requestFullscreen().catch(()=>{}) }catch(e){} };
+
+/* ===================== Modo libre ===================== */
+let F=null;
+function freshSwitch(){
+  const ports={}; for(let i=1;i<=10;i++) ports['port1.0.'+i]={mode:'access',vlan:1,tagged:[],shut:false,desc:''};
+  return {host:'awplus',mode:'login',ifn:'',ifs:[],vlans:{1:'default'},ports,svi:{},saved:null};
+}
+function setMode(m,silent){
+  mode=m; $('mStep').setAttribute('aria-pressed',m==='step'); $('mFree').setAttribute('aria-pressed',m==='free');
+  $('stepBar').hidden=m!=='step'; $('inputRow').hidden=m!=='free'; $('stepCard').hidden=m!=='step'; $('freeCard').hidden=m!=='free';
+  if(m==='free'){
+    $('topoCard').hidden=true;
+    if(!L[cur].free){const fi=L.findIndex(x=>x.free);cur=fi;$('lesson').value=fi;$('lDay').textContent=G[L[fi].g];$('lTitle').textContent=L[fi].t;$('lGoal').textContent=L[fi].goal}
+    term.innerHTML=''; F=freshSwitch();
+    addOut('SW1','Consola conectada. Pulsa Intro o escribe el usuario.','dim');
+    refreshFree(); setTimeout(()=>$('cmd').focus(),30);
+  } else if(!silent){ const i=L[cur].free?0:cur; loadLesson(i,0) }
+}
+$('mStep').onclick=()=>{ if(mode!=='step'){ setMode('step',true); loadLesson(L[cur].free?1:cur,0)} };
+$('mFree').onclick=()=>{ if(mode!=='free') setMode('free') };
+
+const FREE_CHIPS={
+  login:['manager'], pass:['friend'],
+  user:['?','enable','show system','configure terminal'],
+  priv:['?','configure terminal','show running-config','show vlan brief','show interface brief','copy running-config startup-config','disable'],
+  config:['?','hostname SW1','interface port1.0.1','vlan database','line console 0','end','exit'],
+  if:['?','switchport access vlan 10','switchport mode trunk','shutdown','no shutdown','exit','end'],
+  vlan:['?','vlan 10 name ADMIN','vlan 20 name INVITADOS','exit','end'],
+  line:['?','exit','end'], router:['?','exit','end']
+};
+function refreshFree(hint,bad){
+  const p=promptOf(F); const ip=$('inPrompt'); ip.textContent=p; ip.className='pr '+modeClass(F.mode);
+  $('cmd').type = F.mode==='pass'?'password':'text';
+  renderLadder(F,'SW1');
+  const h=$('freeHint');
+  if(hint){h.textContent=hint;h.className='free-hint'+(bad?' bad':'')}
+  else {h.innerHTML='Escribe en la consola o pulsa un comando. Usa <b>?</b> para ver qué se puede hacer en cada nivel y <b>Tab</b> para completar.';h.className='free-hint'}
+  const c=$('chips'); c.innerHTML='';
+  (FREE_CHIPS[F.mode]||[]).forEach(t=>{const b=document.createElement('button');b.className='chip';b.textContent=t;b.onclick=()=>{runFree(t);$('cmd').focus()};c.appendChild(b)});
+}
+const VOC={
+  user:['enable','exit','logout','ping','show'],
+  priv:['configure','copy','disable','erase','exit','logout','ping','show','write'],
+  config:['end','exit','hostname','interface','line','lldp','no','router','show','snmp-server','spanning-tree','vlan','ip'],
+  if:['description','end','exit','interface','ip','no','show','shutdown','switchport','channel-group','mirror','access-group'],
+  vlan:['end','exit','no','vlan','show'],
+  line:['end','exit','exec-timeout','show'],
+  router:['end','exit','network','show']
+};
+const SHOWV=['running-config','startup-config','vlan','interface','system','mac','ip','version'];
+const HELP={
+  enable:'Turn on privileged mode command', exit:'End current mode and down to previous mode', logout:'Exit from the EXEC', ping:'Send echo messages', show:'Show running system information',
+  configure:'Enter configuration mode', copy:'Copy from one file to another', disable:'Turn off privileged mode command', erase:'Erase files', write:'Write running configuration to memory',
+  end:'End current mode and change to EXEC mode', hostname:'Set system\'s network name', interface:'Select an interface to configure', line:'Configure a terminal line', lldp:'LLDP configuration', no:'Negate a command or set its defaults', router:'Enable a routing process', 'snmp-server':'SNMP configuration', 'spanning-tree':'Spanning tree commands', vlan:'Configure VLAN parameters', ip:'Internet Protocol (IP)',
+  description:'Interface specific description', shutdown:'Shutdown the selected interface', switchport:'Set the switching characteristics of the Layer2 interface', 'channel-group':'LACP channel commands', mirror:'Port mirroring', 'access-group':'Specify a hardware access list', 'exec-timeout':'Set the EXEC timeout', network:'Enable routing on an IP network'
+};
+const WHERE={configure:'priv',enable:'user',disable:'priv',copy:'priv',write:'priv',hostname:'config',interface:'config',line:'config','spanning-tree':'config',lldp:'config','snmp-server':'config',switchport:'if',shutdown:'if',description:'if','channel-group':'if',mirror:'if','access-group':'if',vlan:'vlan'};
+
+function expand(tok,list){
+  if(list.includes(tok))return {w:tok};
+  const c=list.filter(x=>x.startsWith(tok)); if(c.length===1)return {w:c[0]}; if(c.length>1)return {amb:true}; return {};
+}
+function invalidAt(raw,idx){ // idx = posición del carácter erróneo dentro del comando
+  return ' '.repeat(promptOf(F).length+1+idx)+'^\n% Invalid input detected at \'^\' marker.';
+}
+function parseIf(name){
+  name=name.toLowerCase();
+  let m=name.match(/^port1\.0\.(\d+)(?:-(?:port)?1\.0\.(\d+))?$/);
+  if(m){const a=+m[1],b=m[2]?+m[2]:a; if(a<1||b>10||b<a)return null; const r=[];for(let i=a;i<=b;i++)r.push('port1.0.'+i);return r}
+  m=name.match(/^vlan(\d+)$/); if(m){const v=+m[1]; if(v<1||v>4094) return null; return ['vlan'+v]}
+  if(/^po\d+$/.test(name)) return [name];
+  return null;
+}
+function vlanBriefFree(){
+  const rows=[VBH]; Object.keys(F.vlans).map(Number).sort((a,b)=>a-b).forEach(v=>{
+    const m=[]; Object.keys(F.ports).forEach(p=>{const o=F.ports[p]; if(o.mode==='access'&&o.vlan===v)m.push(p+'(u)'); if(o.mode==='trunk'&&(o.vlan===v))m.push(p+'(u)'); if(o.mode==='trunk'&&o.tagged.includes(v))m.push(p+'(t)')});
+    const name=(F.vlans[v]+'                ').slice(0,16);
+    const chunks=[];for(let i=0;i<m.length;i+=3)chunks.push(m.slice(i,i+3).join(' '));
+    rows.push((String(v)+'       ').slice(0,8)+name+' STATIC  ACTIVE  '+(chunks[0]||''));
+    for(let i=1;i<chunks.length;i++)rows.push(' '.repeat(41)+chunks[i]);
+  }); return rows.join('\n');
+}
+function runningFree(){
+  const o=['!','hostname '+F.host,'!'];
+  const vs=Object.keys(F.vlans).map(Number).filter(v=>v!==1);
+  if(vs.length){o.push('vlan database');vs.forEach(v=>o.push(' vlan '+v+' name '+F.vlans[v]));o.push('!')}
+  Object.keys(F.ports).forEach(p=>{const x=F.ports[p];const l=[];
+    if(x.desc)l.push(' description '+x.desc);
+    if(x.mode==='trunk'){l.push(' switchport mode trunk'); if(x.tagged.length)l.push(' switchport trunk allowed vlan add '+x.tagged.join(','))}
+    else if(x.vlan!==1)l.push(' switchport access vlan '+x.vlan);
+    if(x.shut)l.push(' shutdown');
+    o.push('interface '+p,' switchport',...(x.mode==='access'?[' switchport mode access']:[]),...l,'!');
+  });
+  Object.keys(F.svi).forEach(s=>{o.push('interface '+s); if(F.svi[s].ip)o.push(' ip address '+F.svi[s].ip); o.push('!')});
+  o.push('line con 0','line vty 0 4','!','end'); return o.join('\n');
+}
+function ifBriefFree(){
+  const r=['Interface             Status          Protocol'];
+  Object.keys(F.ports).forEach(p=>{const x=F.ports[p];const up=['port1.0.1','port1.0.3'].includes(p);r.push((p+'                      ').slice(0,22)+(x.shut?'admin down      ':'admin up        ')+(x.shut?'down':up?'running':'down'))});
+  r.push('lo                    admin up        running','vlan1                 admin up        running');
+  Object.keys(F.svi).forEach(s=>r.push((s+'                      ').slice(0,22)+'admin up        running'));
+  return r.join('\n');
+}
+function doShow(rest){
+  if(!rest.length) return {o:'% Incomplete command.'};
+  const e=expand(rest[0],SHOWV); if(e.amb)return {o:'% Ambiguous command:  "show '+rest[0]+'"'}; if(!e.w)return {bad:true,idx:5};
+  const w=e.w;
+  if(w==='running-config'){ if(F.mode==='user') return {o:'% Invalid input: show running-config requiere el nivel privilegiado.',hint:'Para ver la configuración hay que estar en # (enable).',bad:true}; return {o:runningFree()} }
+  if(w==='startup-config') return {o:F.saved||'% Startup configuration file does not exist (todavía no has guardado nada).'};
+  if(w==='vlan') return {o:vlanBriefFree()};
+  if(w==='interface') return {o:ifBriefFree()};
+  if(w==='system'||w==='version') return {o:O.system.replace(/ awplus$/,' '+F.host)};
+  if(w==='mac') return {o:`VLAN  port             mac             fwd
+${F.ports['port1.0.1'].vlan}     port1.0.1        0050.56a1.0b11  forward   dynamic
+${F.ports['port1.0.3'].vlan}     port1.0.3        0050.56a1.0b12  forward   dynamic`};
+  if(w==='ip'){ const r=['Interface        IP-Address         Status          Protocol','lo               unassigned         admin up        running','vlan1            unassigned         admin up        running']; Object.keys(F.svi).forEach(s=>r.push((s+'                 ').slice(0,17)+((F.svi[s].ip||'unassigned').split('/')[0]+'                   ').slice(0,19)+'admin up        running')); return {o:r.join('\n')} }
+}
+function helpFor(m){ return (VOC[m]||[]).map(k=>'  '+(k+'              ').slice(0,15)+(HELP[k]||'')).join('\n') }
+
+function runFree(raw){
+  const line=raw; const pr=promptOf(F); const prc=modeClass(F.mode);
+  if(F.mode==='pass'){ addLine('SW1','',[{t:pr+' ',c:prc}]) } else addLine('SW1','',[{t:pr+' ',c:prc},{t:line,c:'typed'}]);
+  const out=(t,cls)=>addOut('SW1',t,cls); let hint=null,bad=false;
+  const txt=line.trim();
+  if(F.mode==='login'){ if(!txt){scrollEnd();return refreshFree()} F.user=txt; F.mode='pass'; scrollEnd(); return refreshFree() }
+  if(F.mode==='pass'){ if(F.user==='manager'&&txt==='friend'){out(O.banner);F.mode='user';hint='Dentro. Estás en el nivel usuario (>). Prueba ? o enable.'} else {out('Login incorrect');F.mode='login';hint='Usuario o contraseña incorrectos. De fábrica: manager / friend.';bad=true} scrollEnd(); return refreshFree(hint,bad) }
+  if(!txt){scrollEnd();return refreshFree()}
+  if(txt==='?'){out(helpFor(F.mode));scrollEnd();return refreshFree('Estos son los comandos que existen en el nivel '+LV[F.mode].nm+'.')}
+  if(txt==='^Z'||txt.toLowerCase()==='ctrl+z'){ if(!['user','priv'].includes(F.mode))F.mode='priv'; scrollEnd(); return refreshFree() }
+  const toks=txt.split(/\s+/); const low=toks.map(t=>t.toLowerCase());
+  let neg=false; let t0=low[0];
+  const e0=expand(t0,VOC[F.mode]||[]);
+  if(e0.amb){out('% Ambiguous command:  "'+toks[0]+'"');scrollEnd();return refreshFree('Abreviatura ambigua: escribe más letras.',true)}
+  if(!e0.w){
+    // ¿existe en otro nivel?
+    let other=null; for(const m of ORDER){ if(m===F.mode)continue; const x=expand(t0,VOC[m]||[]); if(x.w){other={m,w:x.w};break} }
+    if(t0==='vlan'&&F.mode!=='vlan') other={m:'vlan',w:'vlan'};
+    out(invalidAt(line,0),'');
+    if(other){ const w=WHERE[other.w]||other.m; hint='"'+other.w+'" no existe aquí. Se escribe en el nivel '+LV[w].nm+' ('+F.host+LV[w].pm+'). Ahora estás en '+LV[F.mode].nm+'.' }
+    else hint='Comando desconocido. Pulsa ? para ver los comandos de este nivel.';
+    scrollEnd(); return refreshFree(hint,true);
+  }
+  let w=e0.w; let args=low.slice(1); let argsRaw=toks.slice(1);
+  if(w==='no'){neg=true; if(!args.length){out('% Incomplete command.');scrollEnd();return refreshFree()} const e1=expand(args[0],VOC[F.mode]||[]); if(!e1.w){out(invalidAt(line,3));scrollEnd();return refreshFree('Después de "no" va el comando que quieres deshacer.',true)} w=e1.w; args=args.slice(1); argsRaw=argsRaw.slice(1)}
+  const R=(o,h,b)=>{ if(o!=null&&o!=='')out(o,b?'':'' ); hint=h||hint; bad=!!b };
+  switch(w){
+    case 'enable': F.mode='priv'; hint='Ahora estás en privilegiado (#): puedes verlo todo y entrar a configurar con configure terminal.'; break;
+    case 'disable': F.mode='user'; break;
+    case 'exit': case 'logout':
+      if(F.mode==='user'||F.mode==='priv'){F.mode='login';hint='Sesión cerrada.'} else if(F.mode==='config'){F.mode='priv'} else {F.mode='config'} break;
+    case 'end': F.mode='priv'; hint='end te devuelve a # desde cualquier nivel de configuración.'; break;
+    case 'configure': { if(args.length&&!'terminal'.startsWith(args[0])){out(invalidAt(line,toks[0].length+1));bad=true;hint='Es configure terminal (o conf t).';break} F.mode='config'; hint='Configuración global. Desde aquí: hostname, interface, vlan database, line…'; break }
+    case 'show': { const r=doShow(args); if(r.bad&&!r.o){out(invalidAt(line,toks[0].length+1));bad=true;hint='show ? → running-config, vlan brief, interface brief, system, mac address-table, ip interface brief'} else {out(r.o); if(r.hint){hint=r.hint;bad=true}} break }
+    case 'copy': case 'write': { if(w==='write'||(args[0]&&'running-config'.startsWith(args[0])&&args[1]&&'startup-config'.startsWith(args[1]))){F.saved=runningFree();out(O.saved);hint='Guardado: la configuración sobrevivirá a un reinicio.'} else {out('% Incomplete command.');hint='copy running-config startup-config';bad=true} break }
+    case 'erase': out('Deleting..\nSuccessful operation'); F.saved=null; break;
+    case 'ping': out(args[0]?PING_OK(args[0]).replace(/Haciendo ping a .*/,'PING '+args[0]):'% Incomplete command.'); break;
+    case 'hostname': { if(neg){F.host='awplus';break} if(!argsRaw[0]){out('% Incomplete command.');bad=true;break} F.host=argsRaw[0]; hint='El prompt cambia al instante.'; break }
+    case 'interface': { const r=argsRaw[0]?parseIf(argsRaw[0]):null; if(!r){out(argsRaw[0]?invalidAt(line,toks[0].length+1):'% Incomplete command.');bad=true;hint='Ejemplos: interface port1.0.1 · interface port1.0.1-1.0.4 · interface vlan10';break}
+      if(r[0].startsWith('vlan')){const v=+r[0].slice(4); if(!F.vlans[v]){out('% VLAN '+v+' does not exist');bad=true;hint='Primero crea la VLAN en vlan database.';break} F.svi[r[0]]=F.svi[r[0]]||{ip:''}}
+      F.mode='if'; F.ifn=argsRaw[0]; F.ifs=r; hint='Todo lo que escribas ahora afecta solo a '+argsRaw[0]+'.'; break }
+    case 'line': F.mode='line'; break;
+    case 'router': F.mode='router'; break;
+    case 'lldp': case 'spanning-tree': case 'snmp-server': case 'ip': case 'description': case 'exec-timeout': case 'network': case 'channel-group': case 'mirror': case 'access-group':
+      if(w==='description'){F.ifs.forEach(p=>{if(F.ports[p])F.ports[p].desc=neg?'':argsRaw.join(' ')})}
+      if(w==='ip'&&F.mode==='if'){ if(!F.ifs[0].startsWith('vlan')){out('% Una dirección IP va en una interfaz vlanN, no en un puerto.');bad=true;hint='interface vlan10 · ip address 192.168.10.1/24';break} const a=argsRaw[1]; if(!a||!/^\d+\.\d+\.\d+\.\d+\/\d+$/.test(a)){out('% Invalid input. En AW+ se escribe: ip address 192.168.10.1/24');bad=true;break} F.svi[F.ifs[0]].ip=neg?'':a }
+      hint='Aceptado (en este simulador no tiene más efecto).'; break;
+    case 'shutdown': F.ifs.forEach(p=>{if(F.ports[p])F.ports[p].shut=!neg}); hint=neg?'Puerto encendido.':'Puerto apagado (admin down).'; break;
+    case 'switchport': {
+      const a=args; const ps=F.ifs.filter(p=>F.ports[p]);
+      if(!ps.length){out('% switchport solo se aplica a puertos (portX.X.X).');bad=true;break}
+      const k1=a[0]&&expand(a[0],['mode','access','trunk']).w;
+      if(k1==='mode'){const m=a[1]&&expand(a[1],['access','trunk']).w; if(!m){out('% Incomplete command.');bad=true;hint='switchport mode access | trunk';break} ps.forEach(p=>{F.ports[p].mode=m; if(m==='access')F.ports[p].tagged=[]}); hint='Modo '+m+'.'}
+      else if(k1==='access'){ const v=+a[2]; if(a[1]!=='vlan'||!v){out('% Incomplete command.');bad=true;hint='switchport access vlan 10';break} if(!F.vlans[v]){out('% VLAN '+v+' does not exist');bad=true;hint='Crea antes la VLAN '+v+' en vlan database.';break} ps.forEach(p=>{F.ports[p].vlan=neg?1:v}); hint='Puerto(s) en la VLAN '+v+'. Compruébalo con end y show vlan brief.' }
+      else if(k1==='trunk'){ if(a[1]!=='allowed'||a[2]!=='vlan'||!a[3]){out('% Incomplete command.');bad=true;hint='switchport trunk allowed vlan add 10,20';break} if(ps.some(p=>F.ports[p].mode!=='trunk')){out('% Port is not a trunk port');bad=true;hint='Primero: switchport mode trunk';break}
+        const op=a[3]; const list=(a[4]||'').split(',').map(Number).filter(Boolean); const miss=list.filter(v=>!F.vlans[v]); if(miss.length){out('% VLAN '+miss.join(',')+' does not exist');bad=true;break}
+        ps.forEach(p=>{const t=F.ports[p].tagged; if(op==='add')list.forEach(v=>{if(!t.includes(v))t.push(v)}); else if(op==='remove')F.ports[p].tagged=t.filter(v=>!list.includes(v))}); hint='VLAN permitidas en el trunk: '+F.ports[ps[0]].tagged.join(',') }
+      else {out('% Incomplete command.');bad=true}
+      break }
+    case 'vlan': {
+      if(F.mode==='config'){ if(args[0]&&'database'.startsWith(args[0])){F.mode='vlan';hint='Base de datos de VLAN: aquí se crean (vlan 10 name ADMIN).'} else {out(invalidAt(line,5));bad=true;hint='Las VLAN se crean dentro de vlan database.'} break }
+      const v=+args[0]; if(!v||v<2||v>4094){out(v===1?'% VLAN 1 is the default VLAN and cannot be changed':'% Invalid VLAN id');bad=true;break}
+      if(neg){ delete F.vlans[v]; Object.values(F.ports).forEach(p=>{if(p.vlan===v)p.vlan=1;p.tagged=p.tagged.filter(x=>x!==v)}); hint='VLAN '+v+' borrada. Sus puertos vuelven a la VLAN 1.'; break }
+      const ni=args.indexOf('name'); F.vlans[v]= ni>-1&&argsRaw[ni+1]?argsRaw[ni+1]:('VLAN'+String(v).padStart(4,'0')); hint='VLAN '+v+' creada. Sal con exit y asígnala a puertos.'; break }
+    default: out(invalidAt(line,0)); bad=true;
+  }
+  scrollEnd(); refreshFree(hint,bad);
+}
+const histF=[]; let hi=0;
+$('cmd').addEventListener('keydown',e=>{
+  const inp=e.target;
+  if(e.key==='Enter'){ const v=inp.value; if(v.trim()&&F.mode!=='pass'){histF.push(v);} hi=histF.length; inp.value=''; runFree(v); }
+  else if(e.key==='ArrowUp'){ if(hi>0){hi--;inp.value=histF[hi]} e.preventDefault() }
+  else if(e.key==='ArrowDown'){ if(hi<histF.length-1){hi++;inp.value=histF[hi]} else {hi=histF.length;inp.value=''} e.preventDefault() }
+  else if(e.key==='Tab'){ e.preventDefault(); if(!F||F.mode==='login'||F.mode==='pass')return;
+    const parts=inp.value.split(' '); const lastI=parts.length-1; const voc= lastI===0?VOC[F.mode]: (expand(parts[0].toLowerCase(),VOC[F.mode]||[]).w==='show'&&lastI===1?SHOWV: (parts[0].toLowerCase().startsWith('conf')&&lastI===1?['terminal']:[]));
+    const c=(voc||[]).filter(x=>x.startsWith(parts[lastI].toLowerCase())); if(c.length===1){parts[lastI]=c[0];inp.value=parts.join(' ')+' '} else if(c.length>1){ refreshFree('Opciones: '+c.join(' · ')) } }
+  else if(e.key==='z'&&e.ctrlKey){ e.preventDefault(); inp.value=''; runFree('^Z') }
+});
+$('term').addEventListener('click',()=>{ if(mode==='free') $('cmd').focus() });
+
+/* ===================== Arranque ===================== */
+(function(){
+  const f=+store.get('x230.font'); if(f) setFont(f); else setFont(fontSize);
+  const li=+store.get('x230.lesson'); const si=+store.get('x230.step');
+  const i = Number.isInteger(li)&&L[li]?li:0;
+  if(L[i].free){ loadLesson(i) } else loadLesson(i, Number.isInteger(si)?si:0);
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{ if(mode==='step') renderStep(step,false) });
+})();
+</script>
